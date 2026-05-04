@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}PII Redaction Workbench{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='icon/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='icon/favicon-32x32.png') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='icon/favicon-16x16.png') }}">
+</head>
+<body>
+  {% block content %}{% endblock %}
+
+  <script>
+    window.INITIAL_RULES = {{ initial_rules|tojson if initial_rules else '[]' }};
+  </script>
+  <script src="{{ url_for('static', filename='js/app.js') }}?v=20"></script>
+</body>
+</html>

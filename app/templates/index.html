@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}PII Redaction Workbench{% endblock %}
+
+{% block content %}
+<div class="app-shell">
+  <header class="topbar">
+    <div>
+      <h1>PII Redaction Workbench</h1>
+      <p class="muted">Manual find/replace rules with split-pane review workflow</p>
+    </div>
+    <div class="topbar-actions">
+    </div>
+  </header>
+
+  <main class="workspace">
+    <form id="redact-form" method="POST" action="{{ url_for('main.redact') }}" class="workspace-form">
+      {{ form.hidden_tag() }}
+      <input type="hidden" name="rules_json" id="rules-json">
+      <input type="hidden" name="selected_finding_ids_json" id="selected-finding-ids-json">
+
+      <section class="pane pane-left">
+        <div class="split-vertical" id="left-split">
+          <section class="stack-panel source-panel" id="source-panel">
+            <div class="pane-header">
+              <h2>Source</h2>
+              <button type="submit" class="primary-btn">Redact</button>
+            </div>
+            <div class="editor-wrap">
+              {{ form.text(class_="editor-textarea", placeholder="Paste raw text here") }}
+            </div>
+          </section>
+
+          <div class="v-divider" id="divider-source-rules" aria-hidden="true"></div>
+
+          <section class="stack-panel rules-panel-block" id="rules-panel-block">
+            <section class="drawer" id="rules-panel">
+              <div class="drawer-header">
+                <div>
+                  <h3>Find & Replace</h3>
+                  <p class="drawer-subtitle">Manual rules for names, companies, orgs, and projects</p>
+                </div>
+                <div class="drawer-actions">
+                  <button type="button" class="secondary-btn" id="add-rule-btn">Add Rule</button>
+                </div>
+              </div>
+              <div class="drawer-body">
+                <div class="rules-grid" id="rules-grid"></div>
+              </div>
+            </section>
+          </section>
+
+          <div class="v-divider" id="divider-rules-findings" aria-hidden="true"></div>
+
+          <section class="stack-panel findings-panel-block" id="findings-panel-block">
+            <section class="drawer" id="findings-panel">
+              <div class="drawer-header">
+                <div>
+                  <h3>Findings</h3>
+                  <p class="drawer-subtitle">Detected values and final replacement tags</p>
+                </div>
+                <div class="drawer-actions">
+                </div>
+              </div>
+              <div class="drawer-body">
+                {% if result and result.findings %}
+                <div class="findings-toolbar">
+                  <button type="button" class="ghost-btn" id="check-all-findings">Check all</button>
+                  <button type="button" class="ghost-btn" id="uncheck-all-findings">Uncheck all</button>
+                </div>
+
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th class="finding-check-col">Include</th>
+                        <th>Entity</th>
+                        <th>Matched</th>
+                        <th>Replacement</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for item in result.findings %}
+                      <tr>
+                        <td class="finding-check-col">
+                          <input
+                            type="checkbox"
+                            class="finding-toggle"
+                            value="{{ item.id }}"
+                            {% if item.selected is not defined or item.selected %}checked{% endif %}
+                          >
+                        </td>
+                        <td>{{ item.entity }}</td>
+                        <td><code>{{ item.match }}</code></td>
+                        <td><code>{{ item.replacement }}</code></td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                  <p>No findings yet. Run redaction to populate this panel.</p>
+                </div>
+                {% endif %}
+              </div>
+            </section>
+          </section>
+        </div>
+      </section>
+
+      <div class="resizer" id="resizer" aria-hidden="true"></div>
+
+      <section class="pane pane-right" id="output-panel">
+        <div class="pane-header">
+          <h2>Redacted Output</h2>
+        </div>
+        <div class="editor-wrap">
+          <textarea class="editor-textarea output-textarea" readonly>{% if result %}{{ result.redacted_text }}{% endif %}</textarea>
+        </div>
+      </section>
+    </form>
+  </main>
+
+  <footer class="app-footer">
+    <span>developed by d0gban</span>
+  </footer>
+</div>
+{% endblock %}
