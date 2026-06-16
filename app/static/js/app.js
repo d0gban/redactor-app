@@ -1,226 +1,106 @@
-// (function () {
-//   if (window.__redactorWorkbenchInitialized) return;
-//   window.__redactorWorkbenchInitialized = true;
-
-//   const form = document.getElementById("redact-form");
-//   const rulesJson = document.getElementById("rules-json");
-//   const selectedFindingIdsJson = document.getElementById("selected-finding-ids-json");
-//   const addRuleBtn = document.getElementById("add-rule-btn");
-//   const rulesGrid = document.getElementById("rules-grid");
-//   const resizer = document.getElementById("resizer");
-//   const leftPane = document.querySelector(".pane-left");
-//   const rightPane = document.querySelector(".pane-right");
-//   const workspaceForm = document.querySelector(".workspace-form");
-//   const checkAllFindingsBtn = document.getElementById("check-all-findings");
-//   const uncheckAllFindingsBtn = document.getElementById("uncheck-all-findings");
-
-//   function escapeHtml(str) {
-//     return String(str || "")
-//       .replace(/&/g, "&amp;")
-//       .replace(/</g, "&lt;")
-//       .replace(/>/g, "&gt;")
-//       .replace(/"/g, "&quot;")
-//       .replace(/'/g, "&#039;");
-//   }
-
-//   function addRuleCard(rule) {
-//     if (!rulesGrid) return;
-//     rule = rule || {};
-
-//     const card = document.createElement("div");
-//     card.className = "rule-card";
-//     card.innerHTML = `
-//       <div class="rule-card-header">
-//         <strong>Rule</strong>
-//         <button type="button" class="danger-btn remove-rule-btn">Remove</button>
-//       </div>
-//       <label>Find text</label>
-//       <input type="text" class="rule-find" placeholder="Value to redact" value="${escapeHtml(rule.find || "")}">
-//       <label>Entity type</label>
-//       <input type="text" class="rule-entity" placeholder="e.g. PERSON / ORG / PROJECT" value="${escapeHtml(rule.entity_type || "")}">
-//       <div class="rule-flags">
-//         <label class="inline-check">
-//           <input type="checkbox" class="rule-case-sensitive" ${rule.case_sensitive ? "checked" : ""}>
-//           <span>Case sensitive</span>
-//         </label>
-//       </div>
-//     `;
-//     rulesGrid.appendChild(card);
-//   }
-
-//   function collectRules() {
-//     if (!rulesGrid) return [];
-
-//     const rules = [];
-//     document.querySelectorAll(".rule-card").forEach(function (card) {
-//       const find = (card.querySelector(".rule-find")?.value || "").trim();
-//       const entityType = (card.querySelector(".rule-entity")?.value || "").trim().toUpperCase();
-//       const caseSensitive = !!card.querySelector(".rule-case-sensitive")?.checked;
-
-//       if (!find || !entityType) return;
-
-//       rules.push({
-//         find: find,
-//         entity_type: entityType,
-//         case_sensitive: caseSensitive
-//       });
-//     });
-
-//     return rules;
-//   }
-
-//   function syncRulesJson() {
-//     if (!rulesJson) return;
-//     rulesJson.value = JSON.stringify(collectRules());
-//   }
-
-//   function syncSelectedFindingIds() {
-//     if (!selectedFindingIdsJson) return;
-
-//     const selected = Array.from(document.querySelectorAll(".finding-toggle:checked")).map(function (checkbox) {
-//       return checkbox.value;
-//     });
-
-//     selectedFindingIdsJson.value = JSON.stringify(selected);
-//   }
-
-//   function setAllFindingsChecked(checked) {
-//     document.querySelectorAll(".finding-toggle").forEach(function (checkbox) {
-//       checkbox.checked = checked;
-//     });
-//     syncSelectedFindingIds();
-//   }
-
-//   function setLeftPaneWidth(px) {
-//     if (!leftPane || !rightPane || !workspaceForm) return;
-
-//     const containerRect = workspaceForm.getBoundingClientRect();
-//     const resizerWidth = resizer ? (resizer.offsetWidth || 6) : 6;
-//     const minLeft = 320;
-//     const minRight = 320;
-//     const maxLeft = Math.max(minLeft, containerRect.width - resizerWidth - minRight);
-//     const width = Math.max(minLeft, Math.min(px, maxLeft));
-
-//     leftPane.style.flex = `0 0 ${width}px`;
-//     leftPane.style.width = `${width}px`;
-//     leftPane.style.minWidth = `${width}px`;
-//     leftPane.style.maxWidth = `${width}px`;
-
-//     rightPane.style.flex = "1 1 0";
-//     rightPane.style.minWidth = "0";
-//   }
-
-//   function wireHorizontalResize() {
-//     if (!resizer || !leftPane || !workspaceForm) return;
-
-//     let dragging = false;
-
-//     function onPointerMove(e) {
-//       if (!dragging) return;
-//       const containerRect = workspaceForm.getBoundingClientRect();
-//       const nextWidth = e.clientX - containerRect.left;
-//       setLeftPaneWidth(nextWidth);
-//     }
-
-//     function onPointerUp() {
-//       if (!dragging) return;
-//       dragging = false;
-//       document.body.style.userSelect = "";
-//       document.body.style.cursor = "";
-//       resizer.classList.remove("is-dragging");
-//       window.removeEventListener("pointermove", onPointerMove);
-//       window.removeEventListener("pointerup", onPointerUp);
-//     }
-
-//     resizer.addEventListener("pointerdown", function (e) {
-//       if (window.innerWidth <= 900) return;
-//       dragging = true;
-//       document.body.style.userSelect = "none";
-//       document.body.style.cursor = "ew-resize";
-//       resizer.classList.add("is-dragging");
-//       e.preventDefault();
-//       window.addEventListener("pointermove", onPointerMove);
-//       window.addEventListener("pointerup", onPointerUp);
-//     });
-//   }
-
-//   if (rulesGrid) {
-//     rulesGrid.innerHTML = "";
-//     const initialRules = Array.isArray(window.INITIAL_RULES) ? window.INITIAL_RULES : [];
-//     if (initialRules.length) initialRules.forEach(addRuleCard);
-//     else addRuleCard({});
-
-//     rulesGrid.addEventListener("input", syncRulesJson);
-//     rulesGrid.addEventListener("change", syncRulesJson);
-//     rulesGrid.addEventListener("click", function (e) {
-//       if (e.target.classList.contains("remove-rule-btn")) {
-//         const card = e.target.closest(".rule-card");
-//         if (card) {
-//           card.remove();
-//           syncRulesJson();
-//         }
-//       }
-//     });
-//   }
-
-//   if (addRuleBtn) {
-//     addRuleBtn.addEventListener("click", function () {
-//       addRuleCard({});
-//       syncRulesJson();
-//     });
-//   }
-
-//   document.querySelectorAll(".finding-toggle").forEach(function (checkbox) {
-//     checkbox.addEventListener("change", syncSelectedFindingIds);
-//   });
-
-//   if (checkAllFindingsBtn) {
-//     checkAllFindingsBtn.addEventListener("click", function () {
-//       setAllFindingsChecked(true);
-//     });
-//   }
-
-//   if (uncheckAllFindingsBtn) {
-//     uncheckAllFindingsBtn.addEventListener("click", function () {
-//       setAllFindingsChecked(false);
-//     });
-//   }
-
-//   if (form) {
-//     form.addEventListener("submit", function () {
-//       syncRulesJson();
-//       syncSelectedFindingIds();
-//     });
-//   }
-
-//   wireHorizontalResize();
-//   syncRulesJson();
-//   syncSelectedFindingIds();
-// })();
-
 (function () {
   if (window.__redactorWorkbenchInitialized) return;
   window.__redactorWorkbenchInitialized = true;
 
-  const form = document.getElementById("redact-form");
-  const rulesJson = document.getElementById("rules-json");
-  const selectedFindingIdsJson = document.getElementById("selected-finding-ids-json");
   const addRuleBtn = document.getElementById("add-rule-btn");
+  const loadSampleBtn = document.getElementById("load-sample-btn");
   const rulesGrid = document.getElementById("rules-grid");
-
-  const resizer = document.getElementById("resizer");
-  const leftPane = document.querySelector(".pane-left");
-  const rightPane = document.querySelector(".pane-right");
-  const workspaceForm = document.querySelector(".workspace-form");
-
-  const sourcePanel = document.querySelector(".source-panel");
-  const rulesPanel = document.querySelector(".rules-panel-block");
-  const findingsPanel = document.querySelector(".findings-panel-block");
-  const dividerSourceRules = document.getElementById("divider-source-rules");
-  const dividerRulesFindings = document.getElementById("divider-rules-findings");
+  const runRedactBtn = document.getElementById("run-redact-btn");
 
   const checkAllFindingsBtn = document.getElementById("check-all-findings");
   const uncheckAllFindingsBtn = document.getElementById("uncheck-all-findings");
+
+  const sourceTextarea = document.getElementById("source-text");
+  const outputTextarea = document.getElementById("output-text");
+  const findingsTableBody = document.getElementById("findings-body");
+  const copyOutputBtn = document.getElementById("copy-output-btn");
+
+  const SAMPLE_DATA = `Case: Client onboarding review
+Analyst: Juan Dela Cruz
+Company: Dogban
+Partner: Bogdan
+Project: Project Narra
+
+Contact email: juan.delacruz@dogban.ai
+Backup email: maria.santos+ops@example-internal.test
+Phone: +63 917 123 4567
+Landline: (02) 8123-4567
+Portal URL: https://portal.dogban.ai/admin/reset?token=abc123](https://portal.dogban.ai/admin/reset?token=abc123
+Support URL: https://support.bogdan.test/ticket/12345](https://support.bogdan.test/ticket/12345
+
+Domain: dogban.ai
+FQDN: juan-main.dogban.ai
+Public IPv4: 203.0.113.10
+Alt IPv4: 198.51.100.24
+IPv6: 2001:0db8:85a3:0000:0000:8a2e:0370:7334
+MAC Address: AA:BB:CC:DD:EE:FF
+Cisco MAC: a1b2.c3d4.e5f6
+
+UUID: 550e8400-e29b-41d4-a716-446655440000
+Session: session=ABCDEF1234567890
+Bearer Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc.def
+JWT: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.abc.def
+
+AWS Access Key: AKIAIOSFODNN7EXAMPLE
+Stripe Key: sk_test_51NabcXYZ1234567890
+GitHub Token: ghp_1234567890abcdefghijklmnopqrst
+Slack Token: xoxb-123456789012-123456789012-abcdefghijklmnop
+
+Credit Card: 4242 4242 4242 4242
+IBAN: GB82WEST12345698765432
+SG NRIC: S1234567A
+SG FIN: F7654321N
+SG UEN: T12AB3456C
+
+Windows Path: C:\\Users\\juan\\Desktop\\secrets.txt
+Unix Path: /home/juan/.ssh/id_rsa
+DB URL: postgres://admin:SuperSecret123@db.internal.local:5432/prod
+
+Private Key:
+-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASC...
+-----END PRIVATE KEY-----
+
+Certificate:
+-----BEGIN CERTIFICATE-----
+MIIDdzCCAl+gAwIBAgIEbmh5...
+-----END CERTIFICATE-----`;
+
+  const state = {
+    sourceText: "",
+    rules: [],
+    findings: [],
+    selectedFindingIds: new Set()
+  };
+
+  async function copyText(text) {
+    if (!text) return false;
+
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (err) {}
+    }
+
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch (err) {
+      ok = false;
+    }
+
+    document.body.removeChild(ta);
+    return ok;
+  }
 
   function escapeHtml(str) {
     return String(str || "")
@@ -236,21 +116,30 @@
     rule = rule || {};
 
     const card = document.createElement("div");
-    card.className = "rule-card";
+    card.className = "rounded-lg border border-zinc-800 bg-zinc-950/60 p-3";
     card.innerHTML = `
-      <div class="rule-card-header">
-        <strong>Rule</strong>
-        <button type="button" class="danger-btn remove-rule-btn">Remove</button>
+      <div class="mb-3 flex items-center justify-between gap-3">
+        <strong class="text-sm text-zinc-100">Rule</strong>
+        <button type="button" class="btn-danger remove-rule-btn">Remove</button>
       </div>
-      <label>Find text</label>
-      <input type="text" class="rule-find" placeholder="Value to redact" value="${escapeHtml(rule.find || "")}">
-      <label>Entity type</label>
-      <input type="text" class="rule-entity" placeholder="e.g. PERSON / ORG / PROJECT" value="${escapeHtml(rule.entity_type || "")}">
-      <div class="rule-flags">
-        <label class="inline-check">
-          <input type="checkbox" class="rule-case-sensitive" ${rule.case_sensitive ? "checked" : ""}>
-          <span>Case sensitive</span>
-        </label>
+
+      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div class="space-y-1.5">
+          <label class="text-xs font-medium text-zinc-400">Find text</label>
+          <input type="text" class="input-base rule-find" placeholder="Value to redact" value="${escapeHtml(rule.find || "")}">
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="text-xs font-medium text-zinc-400">Entity type</label>
+          <input type="text" class="input-base rule-entity" placeholder="e.g. PERSON / ORG / PROJECT" value="${escapeHtml(rule.entity_type || "")}">
+        </div>
+
+        <div class="md:col-span-2">
+          <label class="inline-flex items-center gap-2 text-xs text-zinc-400">
+            <input type="checkbox" class="rule-case-sensitive h-4 w-4 rounded border-zinc-700 bg-zinc-950 text-zinc-100" ${rule.case_sensitive ? "checked" : ""}>
+            <span>Case sensitive</span>
+          </label>
+        </div>
       </div>
     `;
     rulesGrid.appendChild(card);
@@ -260,7 +149,10 @@
     if (!rulesGrid) return [];
 
     const rules = [];
-    document.querySelectorAll(".rule-card").forEach(function (card) {
+    document.querySelectorAll(".rule-find").forEach(function (input) {
+      const card = input.closest(".rounded-lg");
+      if (!card) return;
+
       const find = (card.querySelector(".rule-find")?.value || "").trim();
       const entityType = (card.querySelector(".rule-entity")?.value || "").trim().toUpperCase();
       const caseSensitive = !!card.querySelector(".rule-case-sensitive")?.checked;
@@ -277,213 +169,171 @@
     return rules;
   }
 
-  function syncRulesJson() {
-    if (!rulesJson) return;
-    rulesJson.value = JSON.stringify(collectRules());
+  function getSelectedFindingIdsFromDom() {
+    return new Set(
+      Array.from(document.querySelectorAll(".finding-toggle:checked")).map(function (checkbox) {
+        return checkbox.value;
+      })
+    );
   }
 
-  function syncSelectedFindingIds() {
-    if (!selectedFindingIdsJson) return;
+  function renderFindings(findings) {
+    if (!findingsTableBody) return;
 
-    const selected = Array.from(document.querySelectorAll(".finding-toggle:checked")).map(function (checkbox) {
-      return checkbox.value;
+    if (!Array.isArray(findings) || !findings.length) {
+      findingsTableBody.innerHTML = `
+        <tr>
+          <td colspan="4">
+            <div class="empty-state-block">
+              <p>No findings yet. Run redaction to populate this panel.</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    findingsTableBody.innerHTML = findings.map(function (item) {
+      const checked = item.selected !== false ? "checked" : "";
+      return `
+        <tr>
+          <td class="w-16">
+            <input type="checkbox" class="finding-toggle h-4 w-4 rounded border-zinc-700 bg-zinc-950 text-zinc-100" value="${escapeHtml(item.id)}" ${checked}>
+          </td>
+          <td>${escapeHtml(item.entity)}</td>
+          <td><code class="table-code">${escapeHtml(item.match)}</code></td>
+          <td><code class="table-code">${escapeHtml(item.replacement)}</code></td>
+        </tr>
+      `;
+    }).join("");
+
+    findingsTableBody.querySelectorAll(".finding-toggle").forEach(function (checkbox) {
+      checkbox.addEventListener("change", rerunWithSelection);
     });
+  }
 
-    selectedFindingIdsJson.value = JSON.stringify(selected);
+  function runClientRedaction() {
+    const text = sourceTextarea ? sourceTextarea.value : "";
+    const rules = collectRules();
+
+    state.sourceText = text;
+    state.rules = rules;
+
+    const result = window.RedactionEngine.runRedaction(text, rules, null);
+
+    state.findings = result.findings;
+    state.selectedFindingIds = new Set(
+      result.findings
+        .filter(function (item) { return item.selected !== false; })
+        .map(function (item) { return item.id; })
+    );
+
+    renderFindings(result.findings);
+
+    if (outputTextarea) {
+      outputTextarea.value = result.redacted_text;
+    }
+
+    if (window.RedactionUI) {
+      window.RedactionUI.recomputeLayout();
+    }
+  }
+
+  function rerunWithSelection() {
+    state.selectedFindingIds = getSelectedFindingIdsFromDom();
+
+    const result = window.RedactionEngine.runRedaction(
+      state.sourceText,
+      state.rules,
+      state.selectedFindingIds
+    );
+
+    state.findings = result.findings;
+
+    if (outputTextarea) {
+      outputTextarea.value = result.redacted_text;
+    }
   }
 
   function setAllFindingsChecked(checked) {
     document.querySelectorAll(".finding-toggle").forEach(function (checkbox) {
       checkbox.checked = checked;
     });
-    syncSelectedFindingIds();
+    rerunWithSelection();
   }
 
-  function setLeftPaneWidth(px) {
-    if (!leftPane || !rightPane || !workspaceForm) return;
-
-    const containerRect = workspaceForm.getBoundingClientRect();
-    const resizerWidth = resizer ? (resizer.offsetWidth || 6) : 6;
-    const minLeft = 320;
-    const minRight = 320;
-    const maxLeft = Math.max(minLeft, containerRect.width - resizerWidth - minRight);
-    const width = Math.max(minLeft, Math.min(px, maxLeft));
-
-    leftPane.style.flex = `0 0 ${width}px`;
-    leftPane.style.width = `${width}px`;
-    leftPane.style.minWidth = `${width}px`;
-    leftPane.style.maxWidth = `${width}px`;
-
-    rightPane.style.flex = "1 1 0";
-    rightPane.style.minWidth = "0";
-  }
-
-  function wireHorizontalResize() {
-    if (!resizer || !leftPane || !workspaceForm) return;
-
-    let dragging = false;
-
-    function onPointerMove(e) {
-      if (!dragging) return;
-      const containerRect = workspaceForm.getBoundingClientRect();
-      const nextWidth = e.clientX - containerRect.left;
-      setLeftPaneWidth(nextWidth);
-    }
-
-    function onPointerUp() {
-      if (!dragging) return;
-      dragging = false;
-      document.body.style.userSelect = "";
-      document.body.style.cursor = "";
-      resizer.classList.remove("is-dragging");
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
-    }
-
-    resizer.addEventListener("pointerdown", function (e) {
-      if (window.innerWidth <= 900) return;
-      dragging = true;
-      document.body.style.userSelect = "none";
-      document.body.style.cursor = "ew-resize";
-      resizer.classList.add("is-dragging");
-      e.preventDefault();
-      window.addEventListener("pointermove", onPointerMove);
-      window.addEventListener("pointerup", onPointerUp);
+  if (copyOutputBtn) {
+    copyOutputBtn.addEventListener("click", async function () {
+      const ok = await copyText(outputTextarea ? outputTextarea.value : "");
+      const original = copyOutputBtn.textContent;
+      copyOutputBtn.textContent = ok ? "Copied" : "Failed";
+      setTimeout(function () {
+        copyOutputBtn.textContent = original;
+      }, 1400);
     });
   }
 
-  function px(n) {
-    return `${n}px`;
-  }
+  if (loadSampleBtn && sourceTextarea) {
+    loadSampleBtn.addEventListener("click", function () {
+      sourceTextarea.value = SAMPLE_DATA;
+      sourceTextarea.focus();
+      state.sourceText = SAMPLE_DATA;
 
-  function setPanelHeights(sourceHeight, rulesHeight, findingsHeight) {
-    if (!sourcePanel || !rulesPanel || !findingsPanel) return;
-
-    sourcePanel.style.flex = `0 0 ${sourceHeight}px`;
-    sourcePanel.style.height = px(sourceHeight);
-    sourcePanel.style.minHeight = "120px";
-
-    rulesPanel.style.flex = `0 0 ${rulesHeight}px`;
-    rulesPanel.style.height = px(rulesHeight);
-    rulesPanel.style.minHeight = "120px";
-
-    findingsPanel.style.flex = `0 0 ${findingsHeight}px`;
-    findingsPanel.style.height = px(findingsHeight);
-    findingsPanel.style.minHeight = "120px";
-  }
-
-  function wireVerticalResize(divider, upperPanel, lowerPanel) {
-    if (!divider || !upperPanel || !lowerPanel) return;
-
-    let dragging = false;
-    let startY = 0;
-    let startUpperHeight = 0;
-    let startLowerHeight = 0;
-
-    function onPointerMove(e) {
-      if (!dragging) return;
-
-      const dy = e.clientY - startY;
-      const minPanelHeight = 120;
-
-      let nextUpper = startUpperHeight + dy;
-      let nextLower = startLowerHeight - dy;
-
-      if (nextUpper < minPanelHeight) {
-        nextLower -= (minPanelHeight - nextUpper);
-        nextUpper = minPanelHeight;
-      }
-
-      if (nextLower < minPanelHeight) {
-        nextUpper -= (minPanelHeight - nextLower);
-        nextLower = minPanelHeight;
-      }
-
-      upperPanel.style.flex = `0 0 ${nextUpper}px`;
-      upperPanel.style.height = px(nextUpper);
-
-      lowerPanel.style.flex = `0 0 ${nextLower}px`;
-      lowerPanel.style.height = px(nextLower);
-    }
-
-    function onPointerUp() {
-      if (!dragging) return;
-      dragging = false;
-      document.body.style.userSelect = "";
-      document.body.style.cursor = "";
-      divider.classList.remove("is-dragging");
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("pointerup", onPointerUp);
-    }
-
-    divider.addEventListener("pointerdown", function (e) {
-      if (window.innerWidth <= 900) return;
-
-      dragging = true;
-      startY = e.clientY;
-      startUpperHeight = upperPanel.getBoundingClientRect().height;
-      startLowerHeight = lowerPanel.getBoundingClientRect().height;
-
-      document.body.style.userSelect = "none";
-      document.body.style.cursor = "row-resize";
-      divider.classList.add("is-dragging");
-      e.preventDefault();
-
-      window.addEventListener("pointermove", onPointerMove);
-      window.addEventListener("pointerup", onPointerUp);
+      const original = loadSampleBtn.textContent;
+      loadSampleBtn.textContent = "Loaded";
+      setTimeout(function () {
+        loadSampleBtn.textContent = original;
+      }, 1400);
     });
-  }
-
-  function initVerticalPanels() {
-    if (!sourcePanel || !rulesPanel || !findingsPanel) return;
-    if (window.innerWidth <= 900) return;
-
-    const container = sourcePanel.parentElement;
-    if (!container) return;
-
-    const totalHeight = container.getBoundingClientRect().height;
-    if (!totalHeight) return;
-
-    const dividerCount = 2;
-    const dividerHeight = 8;
-    const usableHeight = totalHeight - dividerCount * dividerHeight;
-
-    const sourceHeight = Math.max(160, Math.floor(usableHeight * 0.42));
-    const rulesHeight = Math.max(120, Math.floor(usableHeight * 0.33));
-    const findingsHeight = Math.max(120, usableHeight - sourceHeight - rulesHeight);
-
-    setPanelHeights(sourceHeight, rulesHeight, findingsHeight);
   }
 
   if (rulesGrid) {
     rulesGrid.innerHTML = "";
     const initialRules = Array.isArray(window.INITIAL_RULES) ? window.INITIAL_RULES : [];
-    if (initialRules.length) initialRules.forEach(addRuleCard);
-    else addRuleCard({});
+    if (initialRules.length) {
+      initialRules.forEach(addRuleCard);
+    } else {
+      addRuleCard({});
+    }
 
-    rulesGrid.addEventListener("input", syncRulesJson);
-    rulesGrid.addEventListener("change", syncRulesJson);
     rulesGrid.addEventListener("click", function (e) {
       if (e.target.classList.contains("remove-rule-btn")) {
-        const card = e.target.closest(".rule-card");
+        const card = e.target.closest(".rounded-lg");
         if (card) {
           card.remove();
-          syncRulesJson();
+          state.rules = collectRules();
+          if (!rulesGrid.children.length) {
+            addRuleCard({});
+          }
+          if (window.RedactionUI) {
+            window.RedactionUI.recomputeLayout();
+          }
         }
       }
+    });
+
+    rulesGrid.addEventListener("input", function () {
+      state.rules = collectRules();
+    });
+
+    rulesGrid.addEventListener("change", function () {
+      state.rules = collectRules();
     });
   }
 
   if (addRuleBtn) {
     addRuleBtn.addEventListener("click", function () {
       addRuleCard({});
-      syncRulesJson();
+      state.rules = collectRules();
+      if (window.RedactionUI) {
+        window.RedactionUI.recomputeLayout();
+      }
     });
   }
 
-  document.querySelectorAll(".finding-toggle").forEach(function (checkbox) {
-    checkbox.addEventListener("change", syncSelectedFindingIds);
-  });
+  if (runRedactBtn) {
+    runRedactBtn.addEventListener("click", runClientRedaction);
+  }
 
   if (checkAllFindingsBtn) {
     checkAllFindingsBtn.addEventListener("click", function () {
@@ -497,23 +347,9 @@
     });
   }
 
-  if (form) {
-    form.addEventListener("submit", function () {
-      syncRulesJson();
-      syncSelectedFindingIds();
-    });
+  state.rules = collectRules();
+
+  if (window.RedactionUI) {
+    window.RedactionUI.initResizers();
   }
-
-  wireHorizontalResize();
-  initVerticalPanels();
-  wireVerticalResize(dividerSourceRules, sourcePanel, rulesPanel);
-  wireVerticalResize(dividerRulesFindings, rulesPanel, findingsPanel);
-
-  window.addEventListener("resize", function () {
-    if (window.innerWidth <= 900) return;
-    initVerticalPanels();
-  });
-
-  syncRulesJson();
-  syncSelectedFindingIds();
 })();
