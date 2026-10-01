@@ -12,7 +12,7 @@ RUN adduser --disabled-password --gecos "" appuser
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY --chown=appuser:appuser app.py ./
+COPY --chown=appuser:appuser run.py ./
 COPY --chown=appuser:appuser app ./app
 
 USER appuser
@@ -23,4 +23,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)"
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", \
-     "--access-logfile", "-", "--forwarded-allow-ips", "*", "app:app"]
+     "--access-logfile", "-", "--forwarded-allow-ips", "*", "run:app"]

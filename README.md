@@ -39,7 +39,7 @@ tests/
 python -m venv .venv
 .venv/Scripts/activate         # Windows; use `source .venv/bin/activate` elsewhere
 pip install -r requirements-dev.txt
-FLASK_DEBUG=1 python app.py    # http://127.0.0.1:5000
+FLASK_DEBUG=1 python run.py    # http://127.0.0.1:5000
 ```
 
 ## Test
