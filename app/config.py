@@ -1,15 +1,10 @@
 import os
-from pathlib import Path
-from dotenv import load_dotenv
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-INSTANCE_DIR = BASE_DIR / "instance"
-load_dotenv(BASE_DIR / ".env")
 
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY", "change-me")
-    ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", "")
-    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 2 * 1024 * 1024))
-    DATABASE = str(INSTANCE_DIR / "app.db")
-    WTF_CSRF_TIME_LIMIT = None
+    SECRET_KEY = os.getenv("SECRET_KEY") or os.urandom(32)
+    # The app never accepts uploads; keep request bodies tiny.
+    MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 64 * 1024))
+    # Cache headers for /static are finalised in security.apply_security_headers.
+    SEND_FILE_MAX_AGE_DEFAULT = int(os.getenv("STATIC_MAX_AGE", 60 * 60 * 24 * 365))
+    TEMPLATES_AUTO_RELOAD = os.getenv("FLASK_DEBUG") == "1"

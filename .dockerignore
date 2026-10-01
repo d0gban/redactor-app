@@ -1,0 +1,12 @@
+.venv
+.git
+.gitignore
+.vscode
+.env
+**/__pycache__
+**/*.pyc
+tests
+instance
+Dockerfile
+docker-compose.yml
+requirements-dev.txt

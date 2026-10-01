@@ -1,20 +1,18 @@
-from flask import Blueprint, render_template, send_from_directory, current_app
-import os
-
+from flask import Blueprint, current_app, render_template, send_from_directory
 
 bp = Blueprint("main", __name__)
 
 
-@bp.route("/", methods=["GET"])
+@bp.get("/")
 def index():
     return render_template("index.html")
 
 
-@bp.route("/favicon.ico")
+@bp.get("/healthz")
+def healthz():
+    return {"status": "ok"}
+
+
+@bp.get("/favicon.ico")
 def favicon():
-    static_icon_dir = os.path.join(current_app.root_path, "static", "icon")
-    return send_from_directory(
-        static_icon_dir,
-        "favicon-32x32.png",
-        mimetype="image/png"
-    )
+    return send_from_directory(current_app.static_folder, "favicon.ico", mimetype="image/x-icon")

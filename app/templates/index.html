@@ -1,242 +1,209 @@
 {% extends "base.html" %}
 
-{% block title %}PII Redaction Workbench{% endblock %}
-
 {% block content %}
-<div class="mobile-only-notice" role="dialog" aria-labelledby="mobile-only-title" aria-describedby="mobile-only-desc">
-  <div class="mobile-only-card">
-    <p class="mobile-only-kicker">Desktop recommended</p>
-    <p id="mobile-only-desc">
-      The redaction workbench uses multi-panel resizing and a wide review layout.
-      Please open this page on a desktop or laptop for the intended experience.
+<div class="app">
+  <header class="app-header">
+    <div class="brand">
+      <img class="brand__logo" src="{{ asset_url('icon/favicon-32x32.png') }}" width="28" height="28" alt="">
+      <div>
+        <h1 class="brand__title">Prompt Redactor</h1>
+        <p class="brand__tagline">Strip secrets and personal data before you paste into an AI tool.</p>
+      </div>
+    </div>
+
+    <p class="privacy-badge">
+      <svg aria-hidden="true" viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor" d="M8 1a3.5 3.5 0 0 0-3.5 3.5V6H4a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1h-.5V4.5A3.5 3.5 0 0 0 8 1Zm2 5H6V4.5a2 2 0 1 1 4 0V6Z"/></svg>
+      Runs locally. Nothing leaves your browser.
     </p>
-  </div>
-</div>
 
-<div class="shell-page">
-  <header class="topbar-shell">
-    <div>
-      <p class="app-kicker">Client-side redaction</p>
-      <h1 class="text-xl font-semibold tracking-[-0.02em] text-zinc-50 md:text-2xl">
-        PII Redaction Workbench
-      </h1>
-      <p class="mt-1 max-w-3xl text-sm text-zinc-400">
-        Review raw text, apply manual replacements, auto-detect sensitive values, then verify the final redacted output.
-      </p>
-
-      <div class="tips-strip mt-3">
-        <span class="tip-chip">1. Paste text in Source</span>
-        <span class="tip-chip">2. Add manual rules</span>
-        <span class="tip-chip">3. Click Redact</span>
-        <span class="tip-chip">4. Review Findings</span>
-        <span class="tip-chip">5. Drag separators to resize</span>
-        <span class="tip-chip">6. Copy final output</span>
-      </div>
+    <div class="mode-tabs" role="tablist" aria-label="Mode">
+      <button type="button" class="mode-tab" role="tab" id="tab-redact" aria-controls="view-redact" aria-selected="true">Redact prompt</button>
+      <button type="button" class="mode-tab" role="tab" id="tab-restore" aria-controls="view-restore" aria-selected="false" tabindex="-1">
+        Restore reply <span class="mode-tab__badge" id="restore-badge" hidden></span>
+      </button>
     </div>
 
-    <div class="toolbar-row">
-      <div class="tooltip-wrap">
-        <button
-          type="button"
-          class="help-trigger"
-          aria-describedby="workbench-tip"
-        >
-          ? Tips
-        </button>
-        <div id="workbench-tip" class="help-tooltip" role="tooltip">
-          Paste raw text in Source, add custom replacement rules, then click Redact.
-          Review Findings to keep or remove specific replacements, drag separators to resize the layout,
-          and use Copy to copy the final redacted text.
-        </div>
+    <details class="help">
+      <summary class="btn btn--ghost btn--sm">Help</summary>
+      <div class="help__panel">
+        <h2>How it works</h2>
+        <ol>
+          <li>Paste your prompt. Secrets, contact details, IDs and URLs are detected as you type.</li>
+          <li>Add names, companies or projects under <strong>Always redact</strong>, or select text and press <strong>Redact selection</strong>.</li>
+          <li>Click any token in the safe prompt to keep the original value. Click again to redact it.</li>
+          <li>Copy the safe prompt and send it to your AI tool.</li>
+          <li>Paste the AI's reply in <strong>Restore reply</strong> to put the real values back.</li>
+        </ol>
+        <h2>Shortcuts</h2>
+        <dl class="shortcuts">
+          <dt><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd></dt><dd>Copy the current result</dd>
+          <dt><kbd>Esc</kbd></dt><dd>Close this help</dd>
+        </dl>
+        <p class="help__note">Detection is pattern-based. Always skim the safe prompt before sending it.</p>
       </div>
-    </div>
+    </details>
   </header>
 
-  <main>
-    <div
-      id="workspace-form"
-      class="workspace-form flex min-h-[76vh] flex-col gap-4 lg:h-[calc(100vh-13rem)] lg:flex-row"
-    >
-      <section
-        id="pane-left"
-        class="pane-left min-w-0 min-h-0 lg:flex lg:h-full lg:min-h-0 lg:flex-col"
-        style="flex: 0 0 58%;"
-      >
-        <div id="left-column" class="flex h-full min-h-0 flex-col gap-4">
-          <section
-            id="source-collapsible"
-            class="panel-card source-panel flex min-h-0 flex-col overflow-hidden"
-            data-panel="source"
-            style="flex: 1.6 1 0;"
-          >
-            <div class="panel-header">
-              <div>
-                <h2 class="panel-title">Source</h2>
-                <p class="panel-subtitle">Paste raw text here before running redaction.</p>
-              </div>
-
-              <div class="toolbar-row">
-                <button type="button" class="btn-add" id="load-sample-btn">Load Sample Data</button>
-                <button type="button" class="btn-redact" id="run-redact-btn">Redact</button>
-              </div>
-            </div>
-
-            <div id="source-content" class="collapsible-content min-h-0 flex-1 p-4" role="region">
-              <textarea
-                id="source-text"
-                class="textarea-base h-full min-h-[260px] w-full resize-none overflow-y-auto"
-                placeholder="Paste raw text here"
-                spellcheck="false"
-              ></textarea>
-            </div>
-          </section>
-
-          <div
-            id="left-resizer"
-            class="panel-resizer-y"
-            role="separator"
-            aria-orientation="horizontal"
-            aria-label="Resize source and lower panels"
-          >
-            <span></span>
-            <small class="resizer-hint">Drag to resize</small>
-          </div>
-
-          <div id="left-bottom-stack" class="left-bottom-stack flex min-h-0 flex-1 flex-col gap-4">
-            <section
-              id="rules-collapsible"
-              class="panel-card rules-panel-block flex min-h-0 flex-col"
-              data-panel="rules"
-            >
-              <div class="panel-header">
-                <div>
-                  <h2 class="panel-title">Find & Replace</h2>
-                  <p class="panel-subtitle">Add manual replacement rules for names, orgs, projects, or custom tokens.</p>
-                </div>
-
-                <div class="toolbar-row">
-                  <button type="button" class="btn-add" id="add-rule-btn">Add Rule</button>
-                </div>
-              </div>
-
-              <div id="rules-content" class="collapsible-content min-h-0 flex-1 p-4" role="region">
-                <div id="rules-scroll" class="h-full min-h-0 overflow-y-auto pr-1">
-                  <div id="rules-grid" class="grid gap-3"></div>
-                </div>
-              </div>
-            </section>
-
-            <div
-              id="rules-findings-resizer"
-              class="panel-resizer-y"
-              role="separator"
-              aria-orientation="horizontal"
-              aria-label="Resize find and replace and findings"
-            >
-              <span></span>
-              <small class="resizer-hint">Drag to resize</small>
-            </div>
-
-            <section
-              id="findings-collapsible"
-              class="panel-card findings-panel-block flex min-h-0 flex-col overflow-hidden"
-              data-panel="findings"
-            >
-              <div class="panel-header">
-                <div>
-                  <h2 class="panel-title">Findings</h2>
-                  <p class="panel-subtitle">Review detected values and choose which replacements to apply.</p>
-                </div>
-
-                <div class="toolbar-row">
-                  <button type="button" class="btn-select" id="check-all-findings">Check all</button>
-                  <button type="button" class="btn-unselect" id="uncheck-all-findings">Uncheck all</button>
-                </div>
-              </div>
-
-              <div
-                id="findings-content"
-                class="collapsible-content flex min-h-0 flex-1 flex-col overflow-hidden px-4 pt-4 pb-4"
-                role="region"
-              >
-                <div class="mb-3 shrink-0 toolbar-row">
-                  <span class="badge-muted">Selectable results</span>
-                </div>
-
-                <div class="min-h-0 flex-1 overflow-hidden rounded-[inherit] pb-2">
-                  <div class="table-scroll h-full min-h-0 overflow-y-auto pr-1 pb-6">
-                    <table class="table-base w-full">
-                      <thead>
-                        <tr>
-                          <th class="w-16">Use</th>
-                          <th>Entity</th>
-                          <th>Matched</th>
-                          <th>Replacement</th>
-                        </tr>
-                      </thead>
-                      <tbody id="findings-body">
-                        <tr>
-                          <td colspan="4">
-                            <div class="empty-state-block">
-                              <p>No findings yet. Run redaction to populate this panel.</p>
-                            </div>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-        </div>
-      </section>
-
-      <div
-        id="main-resizer"
-        class="panel-resizer-x hidden lg:flex"
-        role="separator"
-        aria-orientation="vertical"
-        aria-label="Resize left and right panels"
-      >
-        <span></span>
-        <small class="resizer-hint-x">Drag</small>
+  <main class="app-main">
+    <!-- ===================== Redact view ===================== -->
+    <section id="view-redact" class="view view--redact" role="tabpanel" aria-labelledby="tab-redact" data-pane="source">
+      <div class="pane-tabs" role="tablist" aria-label="Panels">
+        <button type="button" class="pane-tab" role="tab" data-pane-target="source" aria-selected="true">Prompt</button>
+        <button type="button" class="pane-tab" role="tab" data-pane-target="review" aria-selected="false" tabindex="-1">Review <span class="pane-tab__count" data-count="findings">0</span></button>
+        <button type="button" class="pane-tab" role="tab" data-pane-target="output" aria-selected="false" tabindex="-1">Safe prompt</button>
       </div>
 
-      <section class="pane-right min-w-0 lg:flex lg:h-full lg:min-h-0 lg:flex-1 lg:flex-col">
-        <section
-          id="output-collapsible"
-          class="panel-card output-panel flex h-full min-h-0 flex-col"
-          data-panel="output"
-        >
-          <div class="panel-header">
-            <div>
-              <h2 class="panel-title">Redacted Output</h2>
-              <p class="panel-subtitle">Final text after manual replacements and selected auto-detected findings.</p>
+      <div class="workspace" id="workspace">
+        <section class="panel panel--source" data-pane-id="source" aria-labelledby="source-title">
+          <header class="panel__header">
+            <h2 class="panel__title"><label id="source-title" for="source-text">Your prompt</label></h2>
+            <div class="panel__actions">
+              <button type="button" class="btn btn--ghost btn--sm" id="redact-selection-btn" disabled title="Select text in your prompt first">Redact selection</button>
+              <button type="button" class="btn btn--ghost btn--sm" id="load-sample-btn">Load sample</button>
+              <button type="button" class="btn btn--ghost btn--sm" id="clear-btn">Clear</button>
             </div>
-
-            <div class="toolbar-row">
-              <button type="button" class="btn-copy" id="copy-output-btn">Copy</button>
+          </header>
+          <div class="panel__body">
+            <div class="editor">
+              <div class="editor__backdrop" id="source-backdrop" aria-hidden="true"></div>
+              <textarea id="source-text" class="editor__input" spellcheck="false" autocomplete="off" autocapitalize="off"
+                placeholder="Paste the prompt you want to send to an AI tool…"></textarea>
             </div>
           </div>
+          <footer class="panel__footer">
+            <span id="source-stats">0 characters</span>
+            <span class="large-notice" id="large-notice" hidden>
+              Large input: live updates paused.
+              <button type="button" class="btn btn--ghost btn--xs" id="run-now-btn">Redact now</button>
+            </span>
+          </footer>
+        </section>
 
-          <div id="output-content" class="collapsible-content min-h-0 flex-1 p-4" role="region">
-            <textarea
-              id="output-text"
-              class="textarea-base h-full w-full resize-none overflow-y-auto"
-              readonly
-              spellcheck="false"
-              placeholder="Redacted output will appear here"
-            ></textarea>
+        <div class="splitter" id="splitter" role="separator" tabindex="0" aria-orientation="vertical"
+             aria-label="Resize prompt and safe prompt panels" aria-valuemin="25" aria-valuemax="75" aria-valuenow="50"></div>
+
+        <section class="panel panel--output" data-pane-id="output" aria-labelledby="output-title">
+          <header class="panel__header">
+            <h2 class="panel__title" id="output-title">Safe prompt</h2>
+            <div class="panel__actions">
+              <span class="count-pill" id="redaction-count">0 redacted</span>
+              <button type="button" class="btn btn--primary btn--sm" id="copy-output-btn" disabled>Copy safe prompt</button>
+            </div>
+          </header>
+          <div class="panel__body">
+            <div id="output-view" class="output-view" tabindex="0" role="region" aria-labelledby="output-title">
+              <p class="empty-state">Your redacted prompt appears here as you type.</p>
+            </div>
+          </div>
+          <footer class="panel__footer">
+            <span>Click a token to keep the original. Click it again to redact it.</span>
+          </footer>
+        </section>
+      </div>
+
+      <aside class="panel panel--review" data-pane-id="review" aria-label="Review">
+        <section class="review-section" aria-labelledby="terms-title">
+          <div class="review-section__head">
+            <h2 class="review-section__title" id="terms-title">Always redact</h2>
+            <label class="switch" title="Saves your terms and detector settings in this browser. Prompt text is never saved.">
+              <input type="checkbox" id="remember-toggle">
+              <span class="switch__track" aria-hidden="true"></span>
+              <span class="switch__label">Remember on this device</span>
+            </label>
+          </div>
+
+          <form class="term-form" id="term-form" autocomplete="off">
+            <div class="term-form__row">
+              <label class="sr-only" for="term-value">Term to redact</label>
+              <input class="input" id="term-value" name="value" type="text" placeholder="Name, company, project…" required maxlength="200">
+              <label class="sr-only" for="term-entity">Type</label>
+              <select class="input input--select" id="term-entity" name="entity">
+                <option value="PERSON">Person</option>
+                <option value="ORG">Organization</option>
+                <option value="PROJECT">Project</option>
+                <option value="LOCATION">Location</option>
+                <option value="CUSTOM">Other</option>
+              </select>
+              <button type="submit" class="btn btn--secondary btn--sm">Add</button>
+            </div>
+            <div class="term-form__options">
+              <label class="check"><input type="checkbox" id="term-whole-word" checked> Whole word</label>
+              <label class="check"><input type="checkbox" id="term-case"> Match case</label>
+            </div>
+          </form>
+
+          <ul class="term-list" id="term-list" aria-label="Terms"></ul>
+        </section>
+
+        <section class="review-section" aria-labelledby="detectors-title">
+          <h2 class="review-section__title" id="detectors-title">Detectors</h2>
+          <div class="detector-list" id="detector-list"></div>
+        </section>
+
+        <section class="review-section review-section--grow" aria-labelledby="findings-title">
+          <div class="review-section__head">
+            <h2 class="review-section__title" id="findings-title">Findings <span class="muted" data-count="findings">0</span></h2>
+            <div class="panel__actions">
+              <button type="button" class="btn btn--ghost btn--xs" id="redact-all-btn">Redact all</button>
+              <button type="button" class="btn btn--ghost btn--xs" id="keep-all-btn">Keep all</button>
+            </div>
+          </div>
+          <div class="findings" id="findings">
+            <p class="empty-state empty-state--sm">Nothing detected yet.</p>
           </div>
         </section>
-      </section>
-    </div>
+      </aside>
+    </section>
+
+    <!-- ===================== Restore view ===================== -->
+    <section id="view-restore" class="view view--restore" role="tabpanel" aria-labelledby="tab-restore" data-pane="reply" hidden>
+      <p class="restore-info" id="restore-info">Redact and copy a prompt first. The placeholder map exists only in this tab.</p>
+
+      <div class="pane-tabs" role="tablist" aria-label="Panels">
+        <button type="button" class="pane-tab" role="tab" data-pane-target="reply" aria-selected="true">AI reply</button>
+        <button type="button" class="pane-tab" role="tab" data-pane-target="restored" aria-selected="false" tabindex="-1">Restored</button>
+      </div>
+
+      <div class="workspace workspace--restore">
+        <section class="panel" data-pane-id="reply" aria-labelledby="reply-title">
+          <header class="panel__header">
+            <h2 class="panel__title"><label id="reply-title" for="reply-text">AI reply</label></h2>
+            <div class="panel__actions">
+              <button type="button" class="btn btn--ghost btn--sm" id="clear-reply-btn">Clear</button>
+            </div>
+          </header>
+          <div class="panel__body">
+            <div class="editor">
+              <textarea id="reply-text" class="editor__input editor__input--plain" spellcheck="false" autocomplete="off"
+                placeholder="Paste the AI's reply that contains tokens like [EMAIL_1]…"></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" data-pane-id="restored" aria-labelledby="restored-title">
+          <header class="panel__header">
+            <h2 class="panel__title" id="restored-title">Restored reply</h2>
+            <div class="panel__actions">
+              <span class="count-pill" id="restore-count">0 restored</span>
+              <button type="button" class="btn btn--primary btn--sm" id="copy-restored-btn" disabled>Copy restored</button>
+            </div>
+          </header>
+          <div class="panel__body">
+            <div id="restored-view" class="output-view" tabindex="0" role="region" aria-labelledby="restored-title">
+              <p class="empty-state">Original values are put back here.</p>
+            </div>
+          </div>
+          <footer class="panel__footer" id="restore-footer"><span></span></footer>
+        </section>
+      </div>
+    </section>
   </main>
 
-  <footer class="footer-shell">
+  <footer class="app-footer">
     <span>developed by d0gban</span>
-    <span>local client-side workflow</span>
+    <span>Nothing is uploaded or stored. Close the tab to discard everything.</span>
   </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </div>
 {% endblock %}
