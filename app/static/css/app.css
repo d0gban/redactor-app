@@ -836,6 +836,7 @@ body.is-resizing .splitter::before {
 
 .review-section {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
   padding: var(--space-4);
   border-bottom: 1px solid var(--border);
@@ -885,6 +886,7 @@ body.is-resizing .splitter::before {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   max-width: 100%;
   padding: 2px 2px 2px 4px;
   border: 1px solid color-mix(in srgb, var(--cat) 40%, transparent);
@@ -894,6 +896,8 @@ body.is-resizing .splitter::before {
 }
 
 .term__entity {
+  flex: 0 0 auto;
+  max-width: 9em;
   padding: 1px 2px;
   border: 0;
   border-radius: 4px;
@@ -913,17 +917,20 @@ body.is-resizing .splitter::before {
 }
 
 .term__value {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .term__flags {
+  flex: 0 0 auto;
   color: var(--text-subtle);
   font-size: 11px;
 }
 
 .term__remove {
+  flex: 0 0 auto;
   width: 22px;
   height: 22px;
   padding: 0;
@@ -998,11 +1005,13 @@ body.is-resizing .splitter::before {
 
 .findings {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
 }
 
 .finding-group {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 2px;
 }
 
