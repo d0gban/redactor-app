@@ -59,31 +59,30 @@
   --sidebar-w: 340px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color-scheme: light;
-    --bg: #f6f6f7;
-    --bg-elevated: #ffffff;
-    --surface: #ffffff;
-    --surface-hover: #f1f1f3;
-    --border: #e4e4e7;
-    --border-strong: #d4d4d8;
-    --text: #18181b;
-    --text-muted: #52525b;
-    --text-subtle: #71717a;
-    --focus: #4f46e5;
-    --primary: #18181b;
-    --primary-hover: #27272a;
-    --primary-text: #ffffff;
-    --c-secrets: #dc2626;
-    --c-contact: #0284c7;
-    --c-network: #7c3aed;
-    --c-financial: #b45309;
-    --c-ids: #059669;
-    --c-infra: #475569;
-    --c-custom: #db2777;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
-  }
+/* Set by js/theme.js from the saved choice or the OS preference. */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f6f6f7;
+  --bg-elevated: #ffffff;
+  --surface: #ffffff;
+  --surface-hover: #f1f1f3;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
+  --text: #18181b;
+  --text-muted: #52525b;
+  --text-subtle: #71717a;
+  --focus: #4f46e5;
+  --primary: #18181b;
+  --primary-hover: #27272a;
+  --primary-text: #ffffff;
+  --c-secrets: #dc2626;
+  --c-contact: #0284c7;
+  --c-network: #7c3aed;
+  --c-financial: #b45309;
+  --c-ids: #059669;
+  --c-infra: #475569;
+  --c-custom: #db2777;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
 /* ---------- Base ---------- */
@@ -376,6 +375,7 @@ input[type="checkbox"] {
 }
 
 .app-header {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -456,6 +456,16 @@ input[type="checkbox"] {
   text-align: center;
 }
 
+/* Theme toggle: the icon shows the theme a click switches to. */
+.theme-toggle {
+  padding: 6px;
+}
+
+:root[data-theme="light"] .theme-toggle__sun,
+:root:not([data-theme="light"]) .theme-toggle__moon {
+  display: none;
+}
+
 /* Help popover (native <details>, no JS required to open). */
 .help {
   position: relative;
@@ -475,6 +485,8 @@ input[type="checkbox"] {
   right: 0;
   z-index: 40;
   width: min(380px, calc(100vw - 32px));
+  max-height: min(70dvh, 560px);
+  overflow-y: auto;
   padding: var(--space-4);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
@@ -523,6 +535,16 @@ input[type="checkbox"] {
   gap: var(--space-2);
   color: var(--text-subtle);
   font-size: var(--text-xs);
+}
+
+.app-footer a {
+  color: var(--text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.app-footer a:hover {
+  color: var(--text);
 }
 
 /* ---------- Views ---------- */
@@ -1160,6 +1182,17 @@ body.is-resizing .splitter::before {
 
   .brand__tagline {
     display: none;
+  }
+
+  /* Anchor Help to the header so it never runs off-screen when the header wraps. */
+  .help {
+    position: static;
+  }
+
+  .help__panel {
+    left: 0;
+    right: 0;
+    width: auto;
   }
 
   .view,

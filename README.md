@@ -11,7 +11,7 @@ Everything runs in the browser. The Flask server only serves static files; there
 - **Consistent numbered placeholders**: each unique value gets its own token (`[EMAIL_1]`, `[EMAIL_2]`), so the AI can still tell entities apart.
 - **Click to keep**: click any token in the safe prompt, or untick it under *Findings*, to leave that value as-is.
 - **Restore reply**: paste the AI's answer and the tokens are swapped back to the originals, using the map from the prompt you last copied. Unknown tokens are flagged.
-- **Privacy**: optional *Remember on this device* saves only your terms and detector settings to `localStorage`. Prompt text is never stored.
+- **Privacy**: optional *Remember on this device* saves only your terms and detector settings to `localStorage`. Your light/dark theme choice is also kept there. Prompt text is never stored.
 
 ## Project layout
 
