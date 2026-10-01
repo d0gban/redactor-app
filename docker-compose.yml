@@ -2,9 +2,8 @@ services:
   redactor:
     build: .
     ports:
-      - "8000:8000"
-    environment:
-      - SECRET_KEY=${SECRET_KEY:-}
+      # Host port is read from PORT in .env; falls back to 8000 if there is no .env.
+      - "${PORT:-8000}:8000"
     read_only: true
     tmpfs:
       - /tmp

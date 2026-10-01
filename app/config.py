@@ -2,7 +2,6 @@ import os
 
 
 class Config:
-    SECRET_KEY = os.getenv("SECRET_KEY") or os.urandom(32)
     # The app never accepts uploads; keep request bodies tiny.
     MAX_CONTENT_LENGTH = int(os.getenv("MAX_CONTENT_LENGTH", 64 * 1024))
     # Cache headers for /static are finalised in security.apply_security_headers.

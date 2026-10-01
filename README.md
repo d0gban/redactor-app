@@ -39,7 +39,7 @@ tests/
 python -m venv .venv
 .venv/Scripts/activate         # Windows; use `source .venv/bin/activate` elsewhere
 pip install -r requirements-dev.txt
-FLASK_DEBUG=1 python run.py    # http://127.0.0.1:5000
+FLASK_DEBUG=1 python run.py    # http://127.0.0.1:8000
 ```
 
 ## Test
@@ -54,6 +54,22 @@ python -m pytest
 ```bash
 docker compose up --build -d   # http://localhost:8000, health check at /healthz
 ```
+
+### Custom port
+
+The app is served on port **8000** by default. To use another port you must create a `.env` file yourself. It is git-ignored, so it is not included when you clone the repo:
+
+```bash
+cp .env.example .env           # Windows PowerShell: Copy-Item .env.example .env
+```
+
+Then edit `.env`:
+
+```
+PORT=8080
+```
+
+Restart with `docker compose up -d` and open http://localhost:8080. If there is no `.env` file, or `PORT` is not set, port 8000 is used.
 
 The image runs gunicorn as a non-root user on a read-only filesystem. Put it behind HTTPS. The clipboard API requires a secure context; plain-HTTP deployments fall back to a legacy copy path.
 
