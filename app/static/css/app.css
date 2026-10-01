@@ -758,18 +758,16 @@ body.is-resizing .splitter::before {
   box-shadow: inset 0 0 0 1px var(--border-strong);
 }
 
-/* Highlights must not change layout: no padding/border, only background + inset shadow. */
+/* Highlights must not change layout: no padding/border, only background. */
 .hl {
   border-radius: 3px;
   color: transparent;
   background: color-mix(in srgb, var(--cat) 22%, transparent);
-  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--cat) 70%, transparent);
 }
 
 .hl--kept {
   --cat: var(--text-subtle);
-  background: transparent;
-  box-shadow: inset 0 -1px 0 var(--text-subtle);
+  background: color-mix(in srgb, var(--text-subtle) 12%, transparent);
 }
 
 /* ---------- Output view ---------- */
