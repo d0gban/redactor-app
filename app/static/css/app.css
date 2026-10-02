@@ -770,6 +770,10 @@ body.is-resizing .splitter::before {
   background: color-mix(in srgb, var(--text-subtle) 12%, transparent);
 }
 
+.hl--active {
+  background: color-mix(in srgb, var(--cat) 50%, transparent);
+}
+
 /* ---------- Output view ---------- */
 .output-view {
   position: absolute;
@@ -816,8 +820,14 @@ body.is-resizing .splitter::before {
   box-decoration-break: clone;
 }
 
-.token:hover {
+.token:hover,
+.token--active {
   background: color-mix(in srgb, var(--cat) 28%, transparent);
+}
+
+.token--active {
+  outline: 2px solid var(--cat);
+  outline-offset: 1px;
 }
 
 .token--kept {

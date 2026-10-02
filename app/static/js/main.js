@@ -4,7 +4,7 @@ import { createStore, makeTerm } from "./state.js";
 import { $, copyText, plural, toast } from "./ui/dom.js";
 import { createEditor } from "./ui/editor.js";
 import { initPaneTabs, initSplitter, initTablist } from "./ui/layout.js";
-import { onTokenToggle, renderRedacted, renderRestored } from "./ui/output.js";
+import { onTokenHover, onTokenToggle, renderRedacted, renderRestored, setActiveToken } from "./ui/output.js";
 import { bindReview, renderDetectors, renderFindings, renderTerms } from "./ui/review.js";
 
 // Inputs below this size are redacted synchronously on every keystroke; above it, debounced.
@@ -45,7 +45,12 @@ const el = {
   viewRestore: $("#view-restore")
 };
 
-const editor = createEditor(el.source, el.backdrop);
+const editor = createEditor(el.source, el.backdrop, {
+  onHover: (index) => {
+    const token = setActiveToken(el.output, index);
+    if (token) scrollIntoContainer(el.output, token);
+  }
+});
 const redactPanes = initPaneTabs(el.viewRedact);
 initPaneTabs(el.viewRestore);
 initSplitter($("#splitter"), $("#workspace"));
@@ -230,6 +235,15 @@ el.remember.addEventListener("change", () => {
 
 el.source.addEventListener("input", () => setSource(el.source.value));
 onTokenToggle(el.output, (key) => setExcluded(key, !state.excluded.has(key)));
+onTokenHover(el.output, (index) => editor.setActive(index));
+
+/** Scroll `container` just enough to show `child`, without moving the page. */
+function scrollIntoContainer(container, child) {
+  const box = container.getBoundingClientRect();
+  const rect = child.getBoundingClientRect();
+  if (rect.top < box.top) container.scrollTop -= box.top - rect.top + 8;
+  else if (rect.bottom > box.bottom) container.scrollTop += rect.bottom - box.bottom + 8;
+}
 
 $("#run-now-btn").addEventListener("click", runRedaction);
 

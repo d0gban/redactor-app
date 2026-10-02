@@ -7,13 +7,13 @@ export function renderRedacted(container, result, emptyText) {
     return;
   }
   container.innerHTML = result.segments
-    .map((seg) => {
+    .map((seg, i) => {
       if (seg.type === "text") return escapeHtml(seg.text);
       const key = escapeHtml(seg.key);
       if (seg.excluded) {
-        return `<button type="button" class="token token--kept" data-key="${key}" aria-pressed="false" title="Kept as-is. Click to redact as ${escapeHtml(seg.token)}">${escapeHtml(seg.text)}</button>`;
+        return `<button type="button" class="token token--kept" data-key="${key}" data-seg="${i}" aria-pressed="false" title="Kept as-is. Click to redact as ${escapeHtml(seg.token)}">${escapeHtml(seg.text)}</button>`;
       }
-      return `<button type="button" class="token token--${seg.category}" data-key="${key}" aria-pressed="true" title="${escapeHtml(preview(seg.text, 120))}. Click to keep the original">${escapeHtml(seg.token)}</button>`;
+      return `<button type="button" class="token token--${seg.category}" data-key="${key}" data-seg="${i}" aria-pressed="true" title="${escapeHtml(preview(seg.text, 120))}. Click to keep the original">${escapeHtml(seg.token)}</button>`;
     })
     .join("");
 }
@@ -40,4 +40,23 @@ export function onTokenToggle(container, onToggle) {
     const button = event.target.closest("button.token[data-key]");
     if (button && container.contains(button)) onToggle(button.dataset.key);
   });
+}
+
+/** Report the hovered token's segment index (or null) to `onHover`. */
+export function onTokenHover(container, onHover) {
+  const indexOf = (node) => {
+    const button = node instanceof Element ? node.closest("button.token[data-seg]") : null;
+    return button && container.contains(button) ? Number(button.dataset.seg) : null;
+  };
+  container.addEventListener("mouseover", (event) => onHover(indexOf(event.target)));
+  container.addEventListener("mouseleave", () => onHover(null));
+}
+
+/** Emphasise the token for segment `index` (null clears); returns the element, if any. */
+export function setActiveToken(container, index) {
+  container.querySelector(".token--active")?.classList.remove("token--active");
+  if (index == null) return null;
+  const button = container.querySelector(`button.token[data-seg="${index}"]`);
+  button?.classList.add("token--active");
+  return button;
 }
