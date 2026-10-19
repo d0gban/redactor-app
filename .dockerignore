@@ -1,12 +1,12 @@
-.venv
 .git
 .gitignore
 .vscode
 .env
-**/__pycache__
-**/*.pyc
+.env.example
+node_modules
+dist
 tests
-instance
+design-system
 Dockerfile
 docker-compose.yml
-requirements-dev.txt
+README.md

@@ -2,7 +2,7 @@
 
 Strip secrets and personal data from a prompt before you paste it into an AI tool, then put the real values back into the AI's reply.
 
-Everything runs in the browser. The Flask server only serves static files; there is no API, no database, and the CSP sets `connect-src 'none'`, so the page cannot send your text anywhere.
+Everything runs in the browser. It is a static React app: there is no server-side code, no API and no database. nginx serves the files with a strict Content-Security-Policy whose `connect-src 'none'` stops the page from sending your text anywhere, and a test checks that policy.
 
 ## Features
 
@@ -16,38 +16,52 @@ Everything runs in the browser. The Flask server only serves static files; there
 ## Project layout
 
 ```
-app/
-  __init__.py          create_app(), asset fingerprinting, security headers
-  routes.py            /, /healthz, /favicon.ico
-  security.py          CSP and other headers, cache policy
-  static/js/
-    engine/            pure redaction engine (no DOM). Also used by the tests.
-      detectors.js     categories, regex detectors, validators
-      redact.js        detect → resolve overlaps → tokenize → restore
-    ui/                DOM modules (editor, output, review, layout, helpers)
-    state.js           app state + opt-in preference storage
-    main.js            wiring
-  static/css/app.css   the only stylesheet (design tokens, light/dark)
-tests/
-  engine.test.mjs      engine tests (node:test)
-  test_app.py          Flask tests (pytest)
+src/                     React 19 + TypeScript
+  engine/                pure redaction engine (no DOM, plain JS with .d.ts types)
+    detectors.js         categories, regex detectors, validators
+    redact.js            detect → resolve overlaps → tokenize → restore
+  styles/                tokens.css (design tokens, dark/light), editor.css, index.css (Tailwind)
+  components/ui/         shadcn-style primitives (button, tabs, switch, ...) on Radix
+  components/            panel kit, editors, token views, the two views
+  hooks/                 useRedactor (all state and actions), hover link, media query
+  lib/                   clipboard, theme, saved preferences, toasts, helpers
+public/                  copied as-is: theme.js (sets the theme before first paint), favicon, icons
+index.html               Vite entry
+nginx/                   what serves the app in production
+  default.conf           routes, caching, allowed methods, /healthz
+  security-headers.conf  CSP and the other security headers (one source of truth)
+tests/                   Vitest: engine, UI, security headers, build output
+Dockerfile               builds with Node, serves with nginx (no Node in the final image)
 ```
+
+Every pane is built from one panel anatomy (`components/panel.tsx`), and every colour, size and radius comes from `tokens.css`.
 
 ## Run locally
 
+Needs Node 20 or newer.
+
 ```bash
-python -m venv .venv
-.venv/Scripts/activate         # Windows; use `source .venv/bin/activate` elsewhere
-pip install -r requirements-dev.txt
-FLASK_DEBUG=1 python run.py    # http://127.0.0.1:8000
+npm ci                 # installs from the lockfile with install scripts disabled
+npm run dev            # http://localhost:8000, hot reload
 ```
+
+To check the production build with the production security headers:
+
+```bash
+npm run build          # type-checks, then builds into dist/
+npm run preview        # http://localhost:8000, serves dist/ with nginx/security-headers.conf
+```
+
+`npm run dev` has no CSP, because hot reload needs inline scripts; use `preview` to see what production enforces.
 
 ## Test
 
 ```bash
-npm test                       # or: node --test tests/engine.test.mjs  (Node 20+, no dependencies)
-python -m pytest
+npm test               # engine, UI, security headers and the built output (Vitest)
+npm run build          # includes the TypeScript check
 ```
+
+The security tests read `nginx/security-headers.conf` and `nginx/default.conf` and fail if the CSP gains `unsafe-inline`, if a location forgets the headers, or if a missing hashed file could be cached. A build test checks that `index.html` has no inline script or style and that the bundle contains no network APIs.
 
 ## Deploy
 
@@ -71,6 +85,10 @@ PORT=8080
 
 Restart with `docker compose up -d` and open http://localhost:8080. If there is no `.env` file, or `PORT` is not set, port 8000 is used.
 
-The image runs gunicorn as a non-root user on a read-only filesystem. Put it behind HTTPS. The clipboard API requires a secure context; plain-HTTP deployments fall back to a legacy copy path.
+The image runs unprivileged nginx on a read-only filesystem. Put it behind HTTPS; behind a proxy that sets `X-Forwarded-Proto: https`, nginx adds the HSTS header. The clipboard API requires a secure context; plain-HTTP deployments fall back to a legacy copy path.
 
-Static assets are fingerprinted (`?v=<hash>`) and cached as immutable. ES module sub-imports revalidate with ETags, and HTML is `no-store`.
+Caching: `index.html` is never cached. Everything under `/assets/` has a content hash in its name and is cached for a year, but only when the file was actually served (a 404 is never cached). Other files, such as `theme.js` and the icons, revalidate with an ETag.
+
+### Other hosting
+
+The build in `dist/` is plain static files, so any static host works. What matters is that it sends the headers in `nginx/security-headers.conf`, especially the CSP. A host that cannot set response headers cannot give the same guarantee.

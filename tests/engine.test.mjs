@@ -1,8 +1,9 @@
-import { test } from "node:test";
+// @vitest-environment node
+import { test } from "vitest";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { redact, restore, detect, normalizeEntity } from "../app/static/js/engine/redact.js";
+import { redact, restore, detect, normalizeEntity } from "../src/engine/redact.js";
 import {
   CATEGORIES,
   defaultEnabledCategories,
@@ -12,7 +13,7 @@ import {
   luhnCheck,
   isLikelyPhone,
   categoryForEntity
-} from "../app/static/js/engine/detectors.js";
+} from "../src/engine/detectors.js";
 
 const SAMPLE = readFileSync(new URL("./fixtures/sample.txt", import.meta.url), "utf8");
 const ALL = new Set(CATEGORIES.map((c) => c.id));

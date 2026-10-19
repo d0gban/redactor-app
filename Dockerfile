@@ -1,26 +1,20 @@
-FROM python:3.12-slim
+# ---- Build the app. Only the compiled files reach the final image.
+FROM node:22-alpine AS build
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /src
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-WORKDIR /app
+# ---- Serve it: nginx (non-root) sends the files and the security headers. No Node, no app server.
+FROM nginxinc/nginx-unprivileged:stable-alpine
 
-RUN adduser --disabled-password --gecos "" appuser
-
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY --chown=appuser:appuser run.py ./
-COPY --chown=appuser:appuser app ./app
-
-USER appuser
+COPY nginx/default.conf /etc/nginx/conf.d/default.conf
+COPY nginx/security-headers.conf /etc/nginx/security-headers.conf
+COPY --from=build /src/dist /usr/share/nginx/html
 
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)"
-
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", \
-     "--access-logfile", "-", "--forwarded-allow-ips", "*", "run:app"]
+  CMD wget -q -O /dev/null http://127.0.0.1:8000/healthz || exit 1

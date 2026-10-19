@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <meta name="referrer" content="no-referrer">
+  <title>Prompt Redactor</title>
+  <meta name="description" content="Strip secrets and personal data from prompts before sending them to an AI tool, then restore the reply. Runs entirely in your browser.">
+
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icon/favicon-32x32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icon/apple-touch-icon.png">
+  <!-- Classic script, not bundled: sets the theme before first paint so the page never flashes the wrong one. -->
+  <script src="/theme.js"></script>
+  <script type="module" src="/src/main.tsx"></script>
+</head>
+<body>
+  <noscript>
+    <p class="noscript">Prompt Redactor needs JavaScript. All processing happens locally in your browser.</p>
+  </noscript>
+  <div id="root"></div>
+</body>
+</html>

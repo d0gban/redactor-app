@@ -1,0 +1,173 @@
+/* =====================================================================
+   Text surfaces that Tailwind utilities can't express: the textarea +
+   highlight-backdrop editor, redaction tokens and the output view.
+   ===================================================================== */
+
+:root {
+  --editor-font-size: 13px;
+  --editor-line: 1.65;
+  --editor-pad: 14px 16px;
+  --sidebar-w: 340px;
+}
+
+@media (min-width: 1600px) {
+  :root {
+    --editor-font-size: 14px;
+    --sidebar-w: 380px;
+  }
+}
+
+/* iOS Safari zooms into any field under 16px. */
+@media (pointer: coarse) {
+  :root {
+    --editor-font-size: var(--text-base);
+  }
+}
+
+/* Category → hue, shared by highlights, tokens, detectors and findings. */
+.cat--secrets { --cat: var(--c-secrets); }
+.cat--contact { --cat: var(--c-contact); }
+.cat--network { --cat: var(--c-network); }
+.cat--financial { --cat: var(--c-financial); }
+.cat--ids { --cat: var(--c-ids); }
+.cat--infra { --cat: var(--c-infra); }
+.cat--custom { --cat: var(--c-custom); }
+.cat--unknown { --cat: var(--warning); }
+
+/* ---------- Editor: transparent textarea over a mirrored highlight layer ---------- */
+.editor {
+  position: absolute;
+  inset: 0;
+}
+
+.editor__backdrop,
+.editor__input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: var(--editor-pad);
+  border: 0;
+  font-family: var(--font-mono);
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line);
+  letter-spacing: normal;
+  tab-size: 4;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: normal;
+  scrollbar-gutter: stable;
+}
+
+.editor__backdrop {
+  overflow: hidden;
+  color: transparent;
+  pointer-events: none;
+}
+
+.editor__input {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  resize: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  caret-color: var(--text);
+}
+
+.editor__input::placeholder {
+  color: var(--text-subtle);
+  font-family: var(--font-sans);
+}
+
+.editor:focus-within {
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* Highlights must not change layout: no padding or border, only background. */
+.hl {
+  border-radius: 3px;
+  color: transparent;
+  background: color-mix(in srgb, var(--cat) 22%, transparent);
+}
+
+.hl--kept {
+  --cat: var(--text-subtle);
+  background: color-mix(in srgb, var(--text-subtle) 12%, transparent);
+}
+
+.hl--active {
+  background: color-mix(in srgb, var(--cat) 50%, transparent);
+}
+
+/* ---------- Output view ---------- */
+.output-view {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: auto;
+  padding: var(--editor-pad);
+  font-family: var(--font-mono);
+  font-size: var(--editor-font-size);
+  line-height: var(--editor-line);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  scrollbar-gutter: stable;
+}
+
+.output-view:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+/* ---------- Tokens: plain highlights, the same tint as the highlights in the editors ---------- */
+.token {
+  display: inline;
+  margin: 0;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--cat) 22%, transparent);
+  color: var(--cat);
+  font: inherit;
+  font-weight: 600;
+  line-height: inherit;
+  white-space: pre-wrap;
+  text-align: left;
+  cursor: pointer;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.token:hover,
+.token--active {
+  background: color-mix(in srgb, var(--cat) 50%, transparent);
+}
+
+/* A value the user chose to leave as-is (redact view) or as a placeholder (restore view): a grey highlight. */
+.token--kept {
+  --cat: var(--text-subtle);
+  background: color-mix(in srgb, var(--cat) 18%, transparent);
+  color: var(--text);
+  font-weight: 400;
+}
+
+.token--kept:hover,
+.token--kept.token--active {
+  background: color-mix(in srgb, var(--cat) 34%, transparent);
+}
+
+/* A [TOKEN] in the reply that this session's map doesn't know: it can't be restored or toggled. */
+.token-unknown {
+  --cat: var(--warning);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--warning) 20%, transparent);
+  box-shadow: inset 0 -2px 0 var(--warning);
+  color: inherit;
+}
+
+body.is-resizing,
+body.is-resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
