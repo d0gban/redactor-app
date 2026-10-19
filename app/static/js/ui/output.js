@@ -18,27 +18,45 @@ export function renderRedacted(container, result, emptyText) {
     .join("");
 }
 
+/** Restored reply: each restored value is a button that flips it back to its `[TOKEN]` placeholder. */
 export function renderRestored(container, restored, emptyText) {
   if (!restored || !restored.segments.length) {
     container.innerHTML = `<p class="empty-state">${escapeHtml(emptyText)}</p>`;
     return;
   }
   container.innerHTML = restored.segments
-    .map((seg) => {
+    .map((seg, i) => {
       if (seg.type === "text") return escapeHtml(seg.text);
       if (seg.type === "unknown") {
-        return `<mark class="restored restored--unknown" title="Not in this session's placeholder map">${escapeHtml(seg.text)}</mark>`;
+        return `<mark class="token-unknown" data-seg="${i}" title="Not in this session's placeholder map">${escapeHtml(seg.text)}</mark>`;
       }
-      return `<mark class="restored" title="${escapeHtml(seg.token)}">${escapeHtml(seg.text)}</mark>`;
+      const key = escapeHtml(seg.token);
+      if (seg.held) {
+        return `<button type="button" class="token token--kept" data-key="${key}" data-seg="${i}" aria-pressed="false" title="Kept redacted. Click to restore the original">${escapeHtml(seg.token)}</button>`;
+      }
+      return `<button type="button" class="token token--${seg.category}" data-key="${key}" data-seg="${i}" aria-pressed="true" title="${escapeHtml(seg.token)}. Click to keep it redacted">${escapeHtml(seg.text)}</button>`;
     })
     .join("");
 }
 
-/** Delegate clicks on token buttons to `onToggle(key)`. */
+/**
+ * Segments for the reply editor's highlight backdrop. The backdrop mirrors the textarea, so it
+ * shows the pasted `[TOKEN]` text rather than the restored value; indices match `renderRestored`.
+ */
+export function replyHighlights(restored) {
+  if (!restored) return null;
+  return restored.segments.map((seg) => {
+    if (seg.type === "text") return seg;
+    if (seg.type === "unknown") return { type: "span", text: seg.text, category: "unknown", excluded: false };
+    return { type: "span", text: seg.token, category: seg.category, excluded: seg.held };
+  });
+}
+
+/** Delegate clicks on token buttons to `onToggle(key, button)`. */
 export function onTokenToggle(container, onToggle) {
   container.addEventListener("click", (event) => {
     const button = event.target.closest("button.token[data-key]");
-    if (button && container.contains(button)) onToggle(button.dataset.key);
+    if (button && container.contains(button)) onToggle(button.dataset.key, button);
   });
 }
 
@@ -56,7 +74,7 @@ export function onTokenHover(container, onHover) {
 export function setActiveToken(container, index) {
   container.querySelector(".token--active")?.classList.remove("token--active");
   if (index == null) return null;
-  const button = container.querySelector(`button.token[data-seg="${index}"]`);
-  button?.classList.add("token--active");
-  return button;
+  const node = container.querySelector(`[data-seg="${index}"]`);
+  node?.classList.add("token--active");
+  return node;
 }

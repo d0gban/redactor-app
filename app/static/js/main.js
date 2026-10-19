@@ -4,7 +4,7 @@ import { createStore, makeTerm } from "./state.js";
 import { $, copyText, plural, toast } from "./ui/dom.js";
 import { createEditor } from "./ui/editor.js";
 import { initPaneTabs, initSplitter, initTablist } from "./ui/layout.js";
-import { onTokenHover, onTokenToggle, renderRedacted, renderRestored, setActiveToken } from "./ui/output.js";
+import { onTokenHover, onTokenToggle, renderRedacted, renderRestored, replyHighlights, setActiveToken } from "./ui/output.js";
 import { bindReview, renderDetectors, renderFindings, renderTerms } from "./ui/review.js";
 
 // Inputs below this size are redacted synchronously on every keystroke; above it, debounced.
@@ -35,6 +35,7 @@ const el = {
   detectorList: $("#detector-list"),
   findings: $("#findings"),
   reply: $("#reply-text"),
+  replyBackdrop: $("#reply-backdrop"),
   restored: $("#restored-view"),
   restoreInfo: $("#restore-info"),
   restoreCount: $("#restore-count"),
@@ -49,6 +50,13 @@ const editor = createEditor(el.source, el.backdrop, {
   onHover: (index) => {
     const token = setActiveToken(el.output, index);
     if (token) scrollIntoContainer(el.output, token);
+  }
+});
+// Same two-way link in the restore view: reply tokens <-> restored values.
+const replyEditor = createEditor(el.reply, el.replyBackdrop, {
+  onHover: (index) => {
+    const node = setActiveToken(el.restored, index);
+    if (node) scrollIntoContainer(el.restored, node);
   }
 });
 const redactPanes = initPaneTabs(el.viewRedact);
@@ -289,20 +297,51 @@ function updateRestoreInfo() {
   el.restoreBadge.textContent = String(map.size);
 }
 
+/** Tokens the user chose to keep redacted, ignoring choices made against an older prompt's map. */
+function heldTokens(map) {
+  const held = new Set();
+  for (const [token, original] of state.keepRedacted) {
+    if (map.get(token) === original) held.add(token);
+  }
+  return held;
+}
+
+function toggleHeld(token) {
+  const map = activeTokenMap();
+  if (!map.has(token)) return;
+  if (heldTokens(map).has(token)) state.keepRedacted.delete(token);
+  else state.keepRedacted.set(token, map.get(token));
+  runRestore();
+}
+
 function runRestore() {
   state.reply = el.reply.value;
-  restoreResult = state.reply ? restore(state.reply, activeTokenMap()) : null;
+  if (!state.reply) state.keepRedacted.clear();
+  const map = activeTokenMap();
+  restoreResult = state.reply ? restore(state.reply, map, { keep: heldTokens(map) }) : null;
+  replyEditor.render(replyHighlights(restoreResult), state.reply);
   renderRestored(el.restored, restoreResult, "Original values are put back here.");
   const restoredCount = restoreResult ? restoreResult.restored : 0;
-  el.restoreCount.textContent = `${restoredCount.toLocaleString()} restored`;
+  const held = restoreResult ? restoreResult.held : 0;
+  el.restoreCount.textContent = `${restoredCount.toLocaleString()} restored${held ? ` · ${held.toLocaleString()} redacted` : ""}`;
   el.copyRestored.disabled = !restoreResult || !restoreResult.output;
 
   const unknown = restoreResult ? restoreResult.unknown : [];
   el.restoreFooter.firstElementChild.textContent = unknown.length
     ? `${plural(unknown.length, "token")} not found in this session's map: ${unknown.slice(0, 5).join(", ")}${unknown.length > 5 ? "…" : ""}`
-    : "";
+    : restoredCount + held > 0
+      ? "Click a value to keep it redacted. Click it again to restore it."
+      : "";
   el.restoreFooter.classList.toggle("is-warning", unknown.length > 0);
 }
+
+onTokenToggle(el.restored, (token, button) => {
+  const seg = button.dataset.seg;
+  toggleHeld(token);
+  // The toggle re-renders the panel; segment indices are stable here, so keep keyboard focus on the same value.
+  el.restored.querySelector(`button.token[data-seg="${seg}"]`)?.focus({ preventScroll: true });
+});
+onTokenHover(el.restored, (index) => replyEditor.setActive(index));
 
 el.reply.addEventListener("input", runRestore);
 $("#clear-reply-btn").addEventListener("click", () => {

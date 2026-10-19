@@ -181,7 +181,8 @@
           </header>
           <div class="panel__body">
             <div class="editor">
-              <textarea id="reply-text" class="editor__input editor__input--plain" spellcheck="false" autocomplete="off"
+              <div class="editor__backdrop" id="reply-backdrop" aria-hidden="true"></div>
+              <textarea id="reply-text" class="editor__input" spellcheck="false" autocomplete="off"
                 placeholder="Paste the AI's reply that contains tokens like [EMAIL_1]…"></textarea>
             </div>
           </div>

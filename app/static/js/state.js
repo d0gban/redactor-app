@@ -57,6 +57,9 @@ export function createStore() {
     excluded: new Set(),
     remember: prefs ? prefs.remember : false,
     result: null,
+    // Restore: tokens left redacted in the restored reply, with the value each stood for when chosen.
+    // Storing the value drops the choice automatically if a new prompt reuses the token for something else.
+    keepRedacted: new Map(),
     // Token map captured at the last copy, so Restore matches what was actually sent to the AI.
     copiedTokenMap: null,
     copiedAt: null

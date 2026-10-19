@@ -1,5 +1,5 @@
 // Pure redaction pipeline: detect → resolve overlaps → tokenize → restore. No DOM.
-import { CUSTOM_CATEGORY, DETECTORS, defaultEnabledCategories } from "./detectors.js";
+import { CUSTOM_CATEGORY, DETECTORS, categoryForEntity, defaultEnabledCategories } from "./detectors.js";
 
 const TERM_PRIORITY = 10;
 const TOKEN_PATTERN = /\[([A-Z][A-Z0-9_]*?_\d+)\]/g;
@@ -225,12 +225,16 @@ export function redact(text, { terms = [], enabledCategories = defaultEnabledCat
   };
 }
 
-/** Replace `[ENTITY_N]` tokens with their originals. Unknown tokens are left in place and reported. */
-export function restore(text, tokenMap) {
+/**
+ * Replace `[ENTITY_N]` tokens with their originals. Unknown tokens are left in place and reported.
+ * - `keep`: Set of tokens the user chose to leave redacted; they stay as placeholders in the output.
+ */
+export function restore(text, tokenMap, { keep = new Set() } = {}) {
   const source = String(text || "");
   const segments = [];
   const unknown = new Set();
   let restored = 0;
+  let held = 0;
   let output = "";
   let cursor = 0;
 
@@ -247,9 +251,17 @@ export function restore(text, tokenMap) {
       segments.push({ type: "unknown", text: token });
       output += token;
     } else {
-      restored += 1;
-      segments.push({ type: "restored", text: original, token });
-      output += original;
+      const isHeld = keep.has(token);
+      if (isHeld) held += 1;
+      else restored += 1;
+      segments.push({
+        type: "restored",
+        text: original,
+        token,
+        category: categoryForEntity(match[1].replace(/_\d+$/, "")),
+        held: isHeld
+      });
+      output += isHeld ? token : original;
     }
     cursor = match.index + token.length;
   }
@@ -260,5 +272,5 @@ export function restore(text, tokenMap) {
     output += plain;
   }
 
-  return { output, segments, restored, unknown: Array.from(unknown) };
+  return { output, segments, restored, held, unknown: Array.from(unknown) };
 }

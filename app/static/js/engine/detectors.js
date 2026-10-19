@@ -125,3 +125,10 @@ export const DETECTORS = [
   { entity: "WINDOWS_PATH", category: "infra", priority: 1, pattern: /\b[A-Za-z]:\\(?:[^\\/:*?"<>|\r\n]+\\)*[^\\/:*?"<>|\r\n\s]*/g },
   { entity: "UNIX_PATH", category: "infra", priority: 1, pattern: /(?<![\w:/.~-])~?\/(?:[\w.-]+\/)*[\w.-]+/g }
 ];
+
+const CATEGORY_BY_ENTITY = new Map(DETECTORS.map((d) => [d.entity, d.category]));
+
+/** Category for a token's entity (`EMAIL`, `PERSON`, ...). Anything no detector emits is a user term. */
+export function categoryForEntity(entity) {
+  return CATEGORY_BY_ENTITY.get(entity) || CUSTOM_CATEGORY.id;
+}

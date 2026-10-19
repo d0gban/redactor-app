@@ -10,7 +10,7 @@ Everything runs in the browser. The Flask server only serves static files; there
 - **Always redact terms** for names, companies and projects, with whole-word and match-case options. Select text in the prompt and press *Redact selection* to add a term.
 - **Consistent numbered placeholders**: each unique value gets its own token (`[EMAIL_1]`, `[EMAIL_2]`), so the AI can still tell entities apart.
 - **Click to keep**: click any token in the safe prompt, or untick it under *Findings*, to leave that value as-is.
-- **Restore reply**: paste the AI's answer and the tokens are swapped back to the originals, using the map from the prompt you last copied. Unknown tokens are flagged.
+- **Restore reply**: paste the AI's answer and the tokens are swapped back to the originals, using the map from the prompt you last copied. Unknown tokens are flagged. Every restored value is color-coded like the redact view and linked to its token in your reply on hover; click one to keep it redacted in the output, and click again to restore it.
 - **Privacy**: optional *Remember on this device* saves only your terms and detector settings to `localStorage`. Your light/dark theme choice is also kept there. Prompt text is never stored.
 
 ## Project layout

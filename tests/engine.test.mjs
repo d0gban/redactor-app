@@ -10,7 +10,8 @@ import {
   isValidIPv6,
   isValidUUID,
   luhnCheck,
-  isLikelyPhone
+  isLikelyPhone,
+  categoryForEntity
 } from "../app/static/js/engine/detectors.js";
 
 const SAMPLE = readFileSync(new URL("./fixtures/sample.txt", import.meta.url), "utf8");
@@ -111,6 +112,33 @@ test("restore round-trips and reports unknown tokens", () => {
   assert.equal(reply.output, "Ask Juan Dela Cruz about [EMAIL_99].");
   assert.equal(reply.restored, 1);
   assert.deepEqual(reply.unknown, ["[EMAIL_99]"]);
+});
+
+test("restore keeps chosen tokens as placeholders and tags each with its category", () => {
+  const terms = [{ value: "Juan Dela Cruz", entity: "PERSON", wholeWord: true }];
+  const r = redact(SAMPLE, { terms, enabledCategories: ALL });
+  const reply = "Ask [PERSON_1] at [EMAIL_1] (or [EMAIL_1] again), not [EMAIL_99].";
+
+  const all = restore(reply, r.tokenMap);
+  assert.equal(all.restored, 3);
+  assert.equal(all.held, 0);
+
+  const kept = restore(reply, r.tokenMap, { keep: new Set(["[EMAIL_1]"]) });
+  assert.equal(kept.restored, 1);
+  assert.equal(kept.held, 2);
+  assert.equal(kept.output, `Ask Juan Dela Cruz at [EMAIL_1] (or [EMAIL_1] again), not [EMAIL_99].`);
+  assert.equal(kept.segments.map((s) => (s.type === "restored" ? s.token : s.text)).join(""), reply);
+
+  const [person, email] = kept.segments.filter((s) => s.type === "restored");
+  assert.deepEqual([person.category, person.held], ["custom", false]);
+  assert.deepEqual([email.category, email.held], ["contact", true]);
+  assert.equal(email.text, r.tokenMap.get("[EMAIL_1]"));
+});
+
+test("categoryForEntity maps detector entities and falls back to custom", () => {
+  assert.equal(categoryForEntity("EMAIL"), "contact");
+  assert.equal(categoryForEntity("DB_CONNECTION_STRING"), "secrets");
+  assert.equal(categoryForEntity("PERSON"), "custom");
 });
 
 test("segments reconstruct the source exactly", () => {
