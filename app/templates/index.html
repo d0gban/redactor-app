@@ -16,37 +16,39 @@
       Runs locally. Nothing leaves your browser.
     </p>
 
-    <div class="mode-tabs" role="tablist" aria-label="Mode">
-      <button type="button" class="mode-tab" role="tab" id="tab-redact" aria-controls="view-redact" aria-selected="true">Redact prompt</button>
-      <button type="button" class="mode-tab" role="tab" id="tab-restore" aria-controls="view-restore" aria-selected="false" tabindex="-1">
-        Restore reply <span class="mode-tab__badge" id="restore-badge" hidden></span>
-      </button>
-    </div>
-
-    <button type="button" class="btn btn--ghost btn--sm theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
-      <svg class="theme-toggle__sun" aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0-9.25a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 1.75Zm0 10.75a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1a.75.75 0 0 1 .75-.75ZM14.25 8a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1a.75.75 0 0 1 .75.75ZM3.5 8a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1A.75.75 0 0 1 3.5 8Zm8.92-4.42a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0ZM5.34 10.66a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 0 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0Zm7.08 1.76a.75.75 0 0 1-1.06 0l-.7-.7a.75.75 0 1 1 1.06-1.06l.7.7a.75.75 0 0 1 0 1.06ZM5.34 5.34a.75.75 0 0 1-1.06 0l-.7-.7a.75.75 0 0 1 1.06-1.06l.7.7a.75.75 0 0 1 0 1.06Z"/></svg>
-      <svg class="theme-toggle__moon" aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M6.2 1.55a.75.75 0 0 1 .13.82 5.25 5.25 0 0 0 7.3 6.82.75.75 0 0 1 1.02.95A6.75 6.75 0 1 1 5.4 1.33a.75.75 0 0 1 .8.22Z"/></svg>
-    </button>
-
-    <details class="help">
-      <summary class="btn btn--ghost btn--sm">Help</summary>
-      <div class="help__panel">
-        <h2>How it works</h2>
-        <ol>
-          <li>Paste your prompt. Secrets, contact details, IDs and URLs are detected as you type.</li>
-          <li>Add names, companies or projects under <strong>Always redact</strong>, or select text and press <strong>Redact selection</strong>.</li>
-          <li>Click any token in the safe prompt to keep the original value. Click again to redact it.</li>
-          <li>Copy the safe prompt and send it to your AI tool.</li>
-          <li>Paste the AI's reply in <strong>Restore reply</strong> to put the real values back.</li>
-        </ol>
-        <h2>Shortcuts</h2>
-        <dl class="shortcuts">
-          <dt><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd></dt><dd>Copy the current result</dd>
-          <dt><kbd>Esc</kbd></dt><dd>Close this help</dd>
-        </dl>
-        <p class="help__note">Detection is pattern-based. Always skim the safe prompt before sending it.</p>
+    <div class="header-controls">
+      <div class="mode-tabs" role="tablist" aria-label="Mode">
+        <button type="button" class="mode-tab" role="tab" id="tab-redact" aria-controls="view-redact" aria-selected="true"><span>Redact<span class="mode-tab__noun"> prompt</span></span></button>
+        <button type="button" class="mode-tab" role="tab" id="tab-restore" aria-controls="view-restore" aria-selected="false" tabindex="-1">
+          <span>Restore<span class="mode-tab__noun"> reply</span></span> <span class="mode-tab__badge" id="restore-badge" hidden></span>
+        </button>
       </div>
-    </details>
+
+      <button type="button" class="btn btn--ghost btn--sm theme-toggle" id="theme-toggle" aria-label="Toggle theme" title="Toggle theme">
+        <svg class="theme-toggle__sun" aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M8 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0-9.25a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1A.75.75 0 0 1 8 1.75Zm0 10.75a.75.75 0 0 1 .75.75v1a.75.75 0 0 1-1.5 0v-1a.75.75 0 0 1 .75-.75ZM14.25 8a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1a.75.75 0 0 1 .75.75ZM3.5 8a.75.75 0 0 1-.75.75h-1a.75.75 0 0 1 0-1.5h1A.75.75 0 0 1 3.5 8Zm8.92-4.42a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 1 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0ZM5.34 10.66a.75.75 0 0 1 0 1.06l-.7.7a.75.75 0 0 1-1.06-1.06l.7-.7a.75.75 0 0 1 1.06 0Zm7.08 1.76a.75.75 0 0 1-1.06 0l-.7-.7a.75.75 0 1 1 1.06-1.06l.7.7a.75.75 0 0 1 0 1.06ZM5.34 5.34a.75.75 0 0 1-1.06 0l-.7-.7a.75.75 0 0 1 1.06-1.06l.7.7a.75.75 0 0 1 0 1.06Z"/></svg>
+        <svg class="theme-toggle__moon" aria-hidden="true" viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M6.2 1.55a.75.75 0 0 1 .13.82 5.25 5.25 0 0 0 7.3 6.82.75.75 0 0 1 1.02.95A6.75 6.75 0 1 1 5.4 1.33a.75.75 0 0 1 .8.22Z"/></svg>
+      </button>
+
+      <details class="help">
+        <summary class="btn btn--ghost btn--sm">Help</summary>
+        <div class="help__panel">
+          <h2>How it works</h2>
+          <ol>
+            <li>Paste your prompt. Secrets, contact details, IDs and URLs are detected as you type.</li>
+            <li>Add names, companies or projects under <strong>Always redact</strong>, or select text and press <strong>Redact selection</strong>.</li>
+            <li>Click any token in the safe prompt to keep the original value. Click again to redact it.</li>
+            <li>Copy the safe prompt and send it to your AI tool.</li>
+            <li>Paste the AI's reply in <strong>Restore reply</strong> to put the real values back.</li>
+          </ol>
+          <h2>Shortcuts</h2>
+          <dl class="shortcuts">
+            <dt><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd></dt><dd>Copy the current result</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Close this help</dd>
+          </dl>
+          <p class="help__note">Detection is pattern-based. Always skim the safe prompt before sending it.</p>
+        </div>
+      </details>
+    </div>
   </header>
 
   <main class="app-main">
@@ -120,7 +122,7 @@
           <form class="term-form" id="term-form" autocomplete="off">
             <div class="term-form__row">
               <label class="sr-only" for="term-value">Term to redact</label>
-              <input class="input" id="term-value" name="value" type="text" placeholder="Name, company, project…" required maxlength="200">
+              <input class="input" id="term-value" name="value" type="text" placeholder="Name or company" required maxlength="200">
               <label class="sr-only" for="term-entity">Type</label>
               <select class="input input--select" id="term-entity" name="entity">
                 <option value="PERSON">Person</option>

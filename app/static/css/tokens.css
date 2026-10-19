@@ -1,0 +1,185 @@
+/* =====================================================================
+   Design tokens, shared by Prompt Redactor and any sibling site.
+   No selectors other than :root, so this file can be dropped into any
+   project (plain CSS, Next.js globals, etc.) without side effects.
+
+   Layers:
+     1. Primitives  raw values; never use these directly in components.
+     2. Semantic    what a value is for; components use only these.
+   Dark is the default theme. Light applies under :root[data-theme="light"].
+   See design-system/MASTER.md for usage rules.
+   ===================================================================== */
+
+/* ---------- 1. Primitives ---------- */
+:root {
+  /* Neutral ramp, named by lightness (0 = white, 975 = near black). */
+  --gray-0: #ffffff;
+  --gray-25: #f6f6f7;
+  --gray-50: #f4f4f5;
+  --gray-75: #f1f1f3;
+  --gray-100: #e4e4e7;
+  --gray-200: #d4d4d8;
+  --gray-300: #a1a1aa;
+  --gray-400: #84848d;
+  --gray-500: #66666f;
+  --gray-600: #52525b;
+  --gray-700: #3a3a42;
+  --gray-800: #27272a;
+  --gray-850: #1b1b20;
+  --gray-900: #18181b;
+  --gray-925: #131317;
+  --gray-950: #0f0f12;
+  --gray-975: #09090b;
+
+  /* Hues: 400 for dark backgrounds, 600/700 for light backgrounds. */
+  --red-400: #f87171;
+  --red-600: #dc2626;
+  --red-700: #b91c1c;
+  --sky-400: #38bdf8;
+  --sky-600: #0284c7;
+  --violet-400: #a78bfa;
+  --violet-600: #7c3aed;
+  --amber-400: #fbbf24;
+  --amber-700: #b45309;
+  --emerald-400: #34d399;
+  --emerald-600: #059669;
+  --emerald-700: #047857;
+  --slate-400: #94a3b8;
+  --slate-600: #475569;
+  --pink-400: #f472b6;
+  --pink-600: #db2777;
+  --indigo-300: #a5b4fc;
+  --indigo-600: #4f46e5;
+
+  /* Type scale (rem, 16px root). */
+  --text-2xs: 0.6875rem; /* 11px: badges and token labels only */
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+  --text-display: 3.5rem;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 650;
+
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  --tracking-tight: -0.015em;
+  --tracking-caps: 0.05em;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* Spacing: 4px base. --space-1-5 covers the tight 6px gaps in dense UI. */
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --radius-full: 999px;
+
+  /* Motion: exits are faster than entrances. */
+  --dur-fast: 120ms;
+  --dur-base: 150ms;
+  --dur-slow: 180ms;
+  --ease-standard: ease;
+
+  --z-popover: 40;
+  --z-toast: 50;
+
+  /* Minimum touch target (WCAG 2.5.5 / Apple HIG). */
+  --tap-min: 44px;
+}
+
+/* ---------- 2. Semantic: dark (default) ---------- */
+:root {
+  color-scheme: dark;
+
+  --bg: var(--gray-975);
+  --bg-elevated: var(--gray-950);
+  --surface: var(--gray-925);
+  --surface-hover: var(--gray-850);
+  --border: var(--gray-800);
+  --border-strong: var(--gray-700);
+  --border-input: var(--gray-500); /* >= 3:1 on every surface (WCAG 1.4.11) */
+  --text: var(--gray-50);
+  --text-muted: var(--gray-300);
+  --text-subtle: var(--gray-400); /* >= 4.5:1 on every surface */
+  --focus: var(--indigo-300);
+
+  --primary: var(--gray-50);
+  --primary-hover: var(--gray-0);
+  --primary-text: var(--gray-975);
+
+  --success: var(--emerald-400);
+  --warning: var(--amber-400);
+  --danger: var(--red-400);
+
+  /* Category hues: the only accent colors in the UI. */
+  --c-secrets: var(--red-400);
+  --c-contact: var(--sky-400);
+  --c-network: var(--violet-400);
+  --c-financial: var(--amber-400);
+  --c-ids: var(--emerald-400);
+  --c-infra: var(--slate-400);
+  --c-custom: var(--pink-400);
+
+  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- 2. Semantic: light ---------- */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  --bg: var(--gray-25);
+  --bg-elevated: var(--gray-0);
+  --surface: var(--gray-0);
+  --surface-hover: var(--gray-75);
+  --border: var(--gray-100);
+  --border-strong: var(--gray-200);
+  --border-input: var(--gray-400);
+  --text: var(--gray-900);
+  --text-muted: var(--gray-600);
+  --text-subtle: var(--gray-500);
+  --focus: var(--indigo-600);
+
+  --primary: var(--gray-900);
+  --primary-hover: var(--gray-800);
+  --primary-text: var(--gray-0);
+
+  --success: var(--emerald-700);
+  --warning: var(--amber-700);
+  --danger: var(--red-700);
+
+  --c-secrets: var(--red-600);
+  --c-contact: var(--sky-600);
+  --c-network: var(--violet-600);
+  --c-financial: var(--amber-700);
+  --c-ids: var(--emerald-600);
+  --c-infra: var(--slate-600);
+  --c-custom: var(--pink-600);
+
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+}

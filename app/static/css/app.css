@@ -2,87 +2,15 @@
    Prompt Redactor: single stylesheet, no framework.
    ===================================================================== */
 
-/* ---------- Tokens ---------- */
+/* ---------- App tokens ----------
+   Shared primitives and theme colors live in tokens.css (loaded first).
+   Only values specific to this app's layout belong here. */
 :root {
-  color-scheme: dark;
-
-  --bg: #09090b;
-  --bg-elevated: #0f0f12;
-  --surface: #131317;
-  --surface-hover: #1b1b20;
-  --border: #26262b;
-  --border-strong: #3a3a42;
-  --text: #f4f4f5;
-  --text-muted: #a1a1aa;
-  --text-subtle: #71717a;
-  --focus: #a5b4fc;
-
-  --primary: #f4f4f5;
-  --primary-hover: #ffffff;
-  --primary-text: #09090b;
-
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
-
-  /* Category hues: the only accent colors in the UI. */
-  --c-secrets: #f87171;
-  --c-contact: #38bdf8;
-  --c-network: #a78bfa;
-  --c-financial: #fbbf24;
-  --c-ids: #34d399;
-  --c-infra: #94a3b8;
-  --c-custom: #f472b6;
-
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
-
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
-  --text-xs: 0.75rem;
-  --text-sm: 0.8125rem;
-  --text-md: 0.875rem;
-  --text-lg: 1.0625rem;
-
   --editor-font-size: 13px;
   --editor-line: 1.65;
   --editor-pad: 14px 16px;
-
-  --shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 10px 30px rgba(0, 0, 0, 0.35);
   --sidebar-w: 340px;
-}
-
-/* Set by js/theme.js from the saved choice or the OS preference. */
-:root[data-theme="light"] {
-  color-scheme: light;
-  --bg: #f6f6f7;
-  --bg-elevated: #ffffff;
-  --surface: #ffffff;
-  --surface-hover: #f1f1f3;
-  --border: #e4e4e7;
-  --border-strong: #d4d4d8;
-  --text: #18181b;
-  --text-muted: #52525b;
-  --text-subtle: #71717a;
-  --focus: #4f46e5;
-  --primary: #18181b;
-  --primary-hover: #27272a;
-  --primary-text: #ffffff;
-  --c-secrets: #dc2626;
-  --c-contact: #0284c7;
-  --c-network: #7c3aed;
-  --c-financial: #b45309;
-  --c-ids: #059669;
-  --c-infra: #475569;
-  --c-custom: #db2777;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+  --toast-offset: 88px; /* clears panel footers so toasts never hide status text */
 }
 
 /* ---------- Base ---------- */
@@ -146,7 +74,7 @@ kbd {
   padding: 0 5px;
   border: 1px solid var(--border-strong);
   border-bottom-width: 2px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   text-align: center;
@@ -203,7 +131,7 @@ body.is-resizing * {
   line-height: 1.2;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.12s, border-color 0.12s, color 0.12s;
+  transition: background-color var(--dur-fast) var(--ease-standard), border-color var(--dur-fast) var(--ease-standard), color var(--dur-fast) var(--ease-standard);
 }
 
 .btn:hover:not(:disabled) {
@@ -252,7 +180,7 @@ body.is-resizing * {
   width: 100%;
   min-width: 0;
   padding: 7px 10px;
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border-input);
   border-radius: var(--radius-sm);
   background: var(--bg);
   font-size: var(--text-sm);
@@ -271,7 +199,7 @@ body.is-resizing * {
 .check {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1-5);
   color: var(--text-muted);
   font-size: var(--text-xs);
   cursor: pointer;
@@ -308,9 +236,9 @@ input[type="checkbox"] {
   flex: 0 0 auto;
   width: 28px;
   height: 16px;
-  border-radius: 999px;
-  background: var(--border-strong);
-  transition: background-color 0.15s;
+  border-radius: var(--radius-full);
+  background: var(--border-input);
+  transition: background-color var(--dur-base) var(--ease-standard);
 }
 
 .switch__track::after {
@@ -322,7 +250,7 @@ input[type="checkbox"] {
   height: 12px;
   border-radius: 50%;
   background: var(--bg-elevated);
-  transition: transform 0.15s;
+  transition: transform var(--dur-base) var(--ease-standard);
 }
 
 .switch input:checked + .switch__track {
@@ -341,7 +269,7 @@ input[type="checkbox"] {
 .count-pill {
   padding: 2px 8px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   color: var(--text-muted);
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
@@ -407,14 +335,20 @@ input[type="checkbox"] {
 .privacy-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1-5);
   padding: 4px 10px;
   border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: color-mix(in srgb, var(--success) 10%, transparent);
   color: var(--success);
   font-size: var(--text-xs);
   font-weight: 500;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .mode-tabs {
@@ -428,7 +362,8 @@ input[type="checkbox"] {
 .mode-tab {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1-5);
+  white-space: nowrap;
   padding: 6px 14px;
   border: 0;
   border-radius: 7px;
@@ -448,10 +383,10 @@ input[type="checkbox"] {
 .mode-tab__badge {
   min-width: 18px;
   padding: 0 5px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--border-strong);
   color: var(--text);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   line-height: 18px;
   text-align: center;
 }
@@ -483,7 +418,7 @@ input[type="checkbox"] {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  z-index: 40;
+  z-index: var(--z-popover);
   width: min(380px, calc(100vw - 32px));
   max-height: min(70dvh, 560px);
   overflow-y: auto;
@@ -503,7 +438,7 @@ input[type="checkbox"] {
 
 .help__panel ol {
   display: grid;
-  gap: 6px;
+  gap: var(--space-1-5);
   margin-bottom: var(--space-4);
   padding-left: 1.2em;
   color: var(--text-muted);
@@ -512,7 +447,7 @@ input[type="checkbox"] {
 .shortcuts {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 6px var(--space-3);
+  gap: var(--space-1-5) var(--space-3);
   align-items: center;
   margin-bottom: var(--space-3);
   color: var(--text-muted);
@@ -691,10 +626,10 @@ input[type="checkbox"] {
   left: 50%;
   width: 4px;
   height: 44px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   background: var(--border-strong);
   transform: translate(-50%, -50%);
-  transition: background-color 0.12s, height 0.12s;
+  transition: background-color var(--dur-fast) var(--ease-standard), height var(--dur-fast) var(--ease-standard);
 }
 
 .splitter:hover::before,
@@ -807,7 +742,7 @@ body.is-resizing .splitter::before {
   margin: 0;
   padding: 0 3px;
   border: 1px solid color-mix(in srgb, var(--cat) 45%, transparent);
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: color-mix(in srgb, var(--cat) 16%, transparent);
   color: var(--cat);
   font: inherit;
@@ -907,7 +842,7 @@ body.is-resizing .splitter::before {
 .term-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--space-1-5);
   list-style: none;
 }
 
@@ -915,7 +850,7 @@ body.is-resizing .splitter::before {
   --cat: var(--c-custom);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1-5);
   min-width: 0;
   max-width: 100%;
   padding: 2px 2px 2px 4px;
@@ -927,13 +862,12 @@ body.is-resizing .splitter::before {
 
 .term__entity {
   flex: 0 0 auto;
-  max-width: 9em;
   padding: 1px 2px;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--cat);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.03em;
@@ -956,7 +890,7 @@ body.is-resizing .splitter::before {
 .term__flags {
   flex: 0 0 auto;
   color: var(--text-subtle);
-  font-size: 11px;
+  font-size: var(--text-2xs);
 }
 
 .term__remove {
@@ -965,7 +899,7 @@ body.is-resizing .splitter::before {
   height: 22px;
   padding: 0;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
   background: transparent;
   color: var(--text-muted);
   font-size: 16px;
@@ -1089,13 +1023,13 @@ body.is-resizing .splitter::before {
 .finding__token {
   color: var(--cat);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   white-space: nowrap;
 }
 
 .finding__count {
   color: var(--text-subtle);
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-variant-numeric: tabular-nums;
 }
 
@@ -1111,9 +1045,9 @@ body.is-resizing .splitter::before {
 /* ---------- Toast ---------- */
 .toast {
   position: fixed;
-  bottom: var(--space-5);
+  bottom: var(--toast-offset);
   left: 50%;
-  z-index: 50;
+  z-index: var(--z-toast);
   max-width: min(520px, calc(100vw - 32px));
   padding: 10px var(--space-4);
   border: 1px solid var(--border-strong);
@@ -1124,7 +1058,7 @@ body.is-resizing .splitter::before {
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, 8px);
-  transition: opacity 0.18s, transform 0.18s;
+  transition: opacity var(--dur-slow) var(--ease-standard), transform var(--dur-slow) var(--ease-standard);
 }
 
 .toast.is-visible {
@@ -1190,6 +1124,15 @@ body.is-resizing .splitter::before {
 
   .brand__tagline {
     display: none;
+  }
+
+  /* Brand and controls share the first row; the badge drops below them. */
+  .privacy-badge {
+    order: 3;
+  }
+
+  .header-controls {
+    margin-left: auto;
   }
 
   /* Anchor Help to the header so it never runs off-screen when the header wraps. */
@@ -1275,8 +1218,22 @@ body.is-resizing .splitter::before {
 }
 
 @media (max-width: 560px) {
-  .privacy-badge {
-    order: 3;
+  .header-controls {
+    width: 100%;
+  }
+
+  .mode-tabs {
+    flex: 1 1 auto;
+  }
+
+  .mode-tab {
+    flex: 1 1 0;
+    justify-content: center;
+  }
+
+  /* "Redact" / "Restore" alone fit one line beside the theme and Help buttons. */
+  .mode-tab__noun {
+    display: none;
   }
 
   .term-form__row {
@@ -1289,6 +1246,47 @@ body.is-resizing .splitter::before {
 
   .term-form__row > select.input {
     flex: 1 1 auto;
+  }
+}
+
+/* Touch: 44px targets and 16px inputs (smaller inputs make iOS Safari zoom on focus).
+   Desktop with a mouse keeps the compact sizes. */
+@media (pointer: coarse) {
+  :root {
+    --editor-font-size: var(--text-base);
+  }
+
+  .input {
+    font-size: var(--text-base);
+  }
+
+  .input,
+  .btn,
+  .mode-tab,
+  .pane-tab,
+  .check,
+  .switch,
+  .detector,
+  .finding {
+    min-height: var(--tap-min);
+  }
+
+  .theme-toggle {
+    min-width: var(--tap-min);
+  }
+
+  .term {
+    min-height: var(--tap-min);
+    padding: 0 0 0 var(--space-1);
+  }
+
+  .term__entity {
+    align-self: stretch;
+  }
+
+  .term__remove {
+    width: var(--tap-min);
+    height: var(--tap-min);
   }
 }
 
