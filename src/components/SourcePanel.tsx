@@ -1,3 +1,4 @@
+import { Eraser, EyeOff, FileText } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { HighlightEditor } from "@/components/HighlightEditor";
@@ -35,6 +36,14 @@ export function SourcePanel({ r, hover, onHoverEditor, className, style }: Sourc
     });
   };
 
+  const clear = () => {
+    const previous = r.source;
+    r.setSource("");
+    setSelection("");
+    textareaRef.current?.focus();
+    toast("Prompt cleared.", { action: { label: "Undo", onClick: () => r.setSource(previous) } });
+  };
+
   const redactSelection = () => {
     if (!picked || !r.addTerm(picked)) return;
     toast(`Added "${preview(picked, 60)}" as ${entityLabel(resolveEntity(r.termForm))}. You can change the type under Always redact.`, { tone: "success" });
@@ -48,26 +57,19 @@ export function SourcePanel({ r, hover, onHoverEditor, className, style }: Sourc
         </PanelTitle>
         <PanelActions>
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={redactSelection}
             disabled={!picked || picked.length > 200}
             title="Select text in your prompt first"
           >
+            <EyeOff className="size-3.5" aria-hidden="true" />
             Redact selection
           </Button>
-          <Button variant="ghost" size="sm" onClick={loadSample}>
-            Load sample
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              r.setSource("");
-              setSelection("");
-              textareaRef.current?.focus();
-            }}
-          >
+          {/* Clear is kept apart from the action next to it so a slip doesn't wipe the prompt. */}
+          <span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
+          <Button variant="ghost" size="sm" onClick={clear} disabled={!r.source}>
+            <Eraser className="size-3.5" aria-hidden="true" />
             Clear
           </Button>
         </PanelActions>
@@ -79,11 +81,23 @@ export function SourcePanel({ r, hover, onHoverEditor, className, style }: Sourc
           value={r.source}
           onChange={r.setSource}
           segments={r.result && r.resultIsCurrent ? r.result.segments : null}
-          placeholder="Paste the prompt you want to send to an AI tool…"
+          placeholder="Paste or type your prompt here…"
           activeIndex={hover.index}
           onHoverIndex={onHoverEditor}
           onSelectionText={setSelection}
         />
+        {/* The sample is only offered on an empty editor, so loading it can never overwrite a prompt. */}
+        {r.source ? null : (
+          <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center p-6">
+            <div className="grid justify-items-center gap-3 text-center">
+              <p className="text-sm text-subtle">New here? See what gets redacted with a made-up prompt.</p>
+              <Button variant="outline" size="sm" onClick={loadSample} className="pointer-events-auto">
+                <FileText className="size-3.5" aria-hidden="true" />
+                Load sample prompt
+              </Button>
+            </div>
+          </div>
+        )}
       </PanelBody>
       <PanelFooter>
         <span>{chars ? `${plural(chars, "character")} · ~${plural(Math.ceil(chars / 4), "token")}` : "0 characters"}</span>

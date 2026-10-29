@@ -1,4 +1,4 @@
-// Demo prompt shown by "Load sample". Every value here is fake.
+// Demo prompt shown by "Load sample prompt". Every value here is fake.
 export const SAMPLE_PROMPT = `Hi! Can you help me debug our onboarding service? Context below.
 
 Analyst: Juan Dela Cruz (juan.delacruz@dogban.ai, +63 917 123 4567)

@@ -82,15 +82,20 @@ describe("redact view", () => {
     expect(screen.getByRole("status")).toHaveTextContent('Added "Project Narra" as Other');
   });
 
-  test("Load sample fills the prompt and Clear empties it", async () => {
+  test("the sample is only offered on an empty prompt, and Clear can be undone", async () => {
     const user = setup();
-    await user.click(screen.getByRole("button", { name: "Load sample" }));
+    expect(screen.getByRole("button", { name: "Clear" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Load sample prompt" }));
     expect((promptBox() as HTMLTextAreaElement).value).toContain("Juan Dela Cruz");
     expect(within(safePrompt()).getAllByRole("button").length).toBeGreaterThan(20);
+    expect(screen.queryByRole("button", { name: "Load sample prompt" })).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Clear" }));
     expect((promptBox() as HTMLTextAreaElement).value).toBe("");
     expect(screen.getByText(/redacted prompt appears here/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Undo" }));
+    expect((promptBox() as HTMLTextAreaElement).value).toContain("Juan Dela Cruz");
   });
 
   test("copying records the placeholder map and says what was copied", async () => {
