@@ -74,16 +74,7 @@ function TermsSection({ r }: { r: Redactor }) {
 
   return (
     <section aria-labelledby="terms-title" className={sectionClasses}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <SectionTitle id="terms-title">Always redact</SectionTitle>
-        <label
-          className="inline-flex items-center gap-2 text-xs text-muted-foreground pointer-coarse:min-h-11"
-          title="Saves your terms and detector settings in this browser. Prompt text is never saved."
-        >
-          <Switch checked={r.remember} onCheckedChange={r.setRemember} />
-          Remember on this device
-        </label>
-      </div>
+      <SectionTitle id="terms-title">Always redact</SectionTitle>
 
       <form
         autoComplete="off"
@@ -174,23 +165,38 @@ function TermsSection({ r }: { r: Redactor }) {
         )}
       </ul>
 
-      <SettingsTransfer r={r} />
+      <SavedSettings r={r} />
     </section>
   );
 }
 
-function SettingsTransfer({ r }: { r: Redactor }) {
+/** Everything about keeping settings: remembering them here, or moving them between browsers as a file. */
+function SavedSettings({ r }: { r: Redactor }) {
   const fileRef = useRef<HTMLInputElement>(null);
   return (
-    <div className="flex flex-wrap items-center gap-1">
-      <Button variant="ghost" size="xs" onClick={() => fileRef.current?.click()} title="Add terms and detector settings from a .json file">
-        <Upload className="size-3.5" aria-hidden="true" />
-        Import settings
-      </Button>
-      <Button variant="ghost" size="xs" onClick={r.exportConfig} title="Save terms and detector settings as .json. Prompt text is not included.">
-        <Download className="size-3.5" aria-hidden="true" />
-        Export settings
-      </Button>
+    <div role="group" aria-labelledby="saved-settings-title" aria-describedby="saved-settings-hint" className="-mx-4 grid gap-3 border-t px-4 pt-4">
+      <div className="grid gap-0.5">
+        <h3 id="saved-settings-title" className="text-sm font-semibold">
+          Saved settings
+        </h3>
+        <p id="saved-settings-hint" className="text-xs text-subtle">
+          Terms and detector toggles only. Prompt text is never included.
+        </p>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+          <Upload className="size-3.5" aria-hidden="true" />
+          Import
+        </Button>
+        <Button variant="outline" size="sm" onClick={r.exportConfig}>
+          <Download className="size-3.5" aria-hidden="true" />
+          Export
+        </Button>
+      </div>
+      <label className="inline-flex items-center gap-2 text-xs text-muted-foreground pointer-coarse:min-h-11">
+        <Switch checked={r.remember} onCheckedChange={r.setRemember} />
+        Remember on this device
+      </label>
       <input
         ref={fileRef}
         type="file"
