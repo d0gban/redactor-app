@@ -8,8 +8,8 @@ import { Input, NativeSelect } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { CATEGORIES, CUSTOM_CATEGORY } from "@/engine/detectors.js";
-import type { Redactor } from "@/hooks/useRedactor";
-import { ENTITY_OPTIONS } from "@/lib/entities";
+import { resolveEntity, type Redactor } from "@/hooks/useRedactor";
+import { CUSTOM_NAME_MAX, ENTITY_OPTIONS, entityLabel } from "@/lib/entities";
 import type { TermItem } from "@/lib/prefs";
 import { plural, preview } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ const GROUP_ORDER = [CUSTOM_CATEGORY, ...CATEGORIES];
 
 // Tablet widths lay the sections out side by side under the editors; wider screens stack them in a sidebar.
 const sectionClasses =
-  "grid min-w-0 content-start gap-3 border-b p-4 last:border-b-0 lg:max-xl:overflow-y-auto lg:max-xl:border-r lg:max-xl:border-b-0 lg:max-xl:last:border-r-0";
+  "grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-3 border-b p-4 last:border-b-0 lg:max-xl:overflow-y-auto lg:max-xl:border-r lg:max-xl:border-b-0 lg:max-xl:last:border-r-0";
 
 function SectionTitle({ id, children }: { id: string; children: React.ReactNode }) {
   return (
@@ -33,15 +33,18 @@ function Swatch({ off = false }: { off?: boolean }) {
 }
 
 function TermChip({ term, r }: { term: TermItem; r: Redactor }) {
-  const options = ENTITY_OPTIONS.some(([value]) => value === term.entity) ? ENTITY_OPTIONS : [...ENTITY_OPTIONS, [term.entity, term.entity] as const];
+  const options = ENTITY_OPTIONS.some(([value]) => value === term.entity)
+    ? ENTITY_OPTIONS
+    : [...ENTITY_OPTIONS, [term.entity, entityLabel(term.entity)] as const];
   const flags = [term.caseSensitive ? "Aa" : "", term.wholeWord ? "" : "partial"].filter(Boolean).join(" · ");
+  const name = preview(term.value, 60);
   return (
     <li className="cat--custom inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-md border border-(--cat)/40 bg-(--cat)/10 py-0.5 pr-0.5 pl-1 text-sm">
       <select
         value={term.entity}
         onChange={(event) => r.changeTermEntity(term.id, event.target.value)}
-        aria-label={`Type for ${term.value}`}
-        className="shrink-0 rounded-[4px] bg-transparent px-0.5 text-2xs font-semibold tracking-wide text-(--cat) uppercase pointer-coarse:min-h-11"
+        aria-label={`Type for ${name}`}
+        className="max-w-[45%] shrink-0 truncate rounded-[4px] bg-transparent px-0.5 text-2xs font-semibold tracking-wide text-(--cat) uppercase pointer-coarse:min-h-11"
       >
         {options.map(([value, label]) => (
           <option key={value} value={value} className="bg-popover text-foreground normal-case">
@@ -49,14 +52,14 @@ function TermChip({ term, r }: { term: TermItem; r: Redactor }) {
           </option>
         ))}
       </select>
-      <span className="min-w-0 truncate" title={term.value}>
+      <span className="min-w-0 flex-1 truncate" title={term.value}>
         {preview(term.value, 40)}
       </span>
       {flags ? <span className="shrink-0 text-2xs text-subtle">{flags}</span> : null}
       <button
         type="button"
         onClick={() => r.removeTerm(term.id)}
-        aria-label={`Remove ${term.value}`}
+        aria-label={`Remove ${name}`}
         className="grid size-[22px] shrink-0 place-items-center rounded-[4px] text-muted-foreground hover:bg-destructive/20 hover:text-destructive pointer-coarse:size-11"
       >
         <X className="size-3.5" aria-hidden="true" />
@@ -125,6 +128,30 @@ function TermsSection({ r }: { r: Redactor }) {
             Add
           </Button>
         </div>
+        {termForm.entity === "CUSTOM" ? (
+          <div className="grid gap-1">
+            <Label htmlFor="term-custom-name" className="text-xs text-muted-foreground">
+              Token name (optional)
+            </Label>
+            <Input
+              id="term-custom-name"
+              name="customName"
+              maxLength={CUSTOM_NAME_MAX}
+              placeholder="e.g. Ticket ID"
+              value={termForm.customName}
+              onChange={(event) => setTermForm({ ...termForm, customName: event.target.value })}
+              aria-describedby="term-custom-hint"
+            />
+            <p id="term-custom-hint" className="flex flex-wrap justify-between gap-x-2 text-xs text-subtle">
+              <span className="min-w-0 [overflow-wrap:anywhere]">
+                Becomes <code className="font-mono text-(--cat) cat--custom">[{resolveEntity(termForm)}_1]</code>
+              </span>
+              <span className="tabular-nums">
+                {termForm.customName.length}/{CUSTOM_NAME_MAX}
+              </span>
+            </p>
+          </div>
+        ) : null}
         <div className="flex gap-4">
           <label className="inline-flex items-center gap-1.5 text-xs text-muted-foreground pointer-coarse:min-h-11">
             <Checkbox checked={termForm.wholeWord} onCheckedChange={(c) => setTermForm({ ...termForm, wholeWord: c === true })} />
@@ -137,7 +164,7 @@ function TermsSection({ r }: { r: Redactor }) {
         </div>
       </form>
 
-      <ul aria-label="Terms" className="flex flex-wrap gap-1.5">
+      <ul aria-label="Terms" className="flex min-w-0 flex-wrap gap-1.5">
         {r.terms.length ? (
           r.terms.map((term) => <TermChip key={term.id} term={term} r={r} />)
         ) : (

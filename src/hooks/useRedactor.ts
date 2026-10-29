@@ -3,9 +3,10 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "rea
 import { defaultEnabledCategories } from "@/engine/detectors.js";
 import { normalizeEntity, redact, restore, type RedactResult, type RestoreResult } from "@/engine/redact.js";
 import { copyText } from "@/lib/clipboard";
+import { customEntity } from "@/lib/entities";
 import { makeTerm, readPrefs, writePrefs, type TermItem } from "@/lib/prefs";
 import { SAMPLE_PROMPT, SAMPLE_TERMS } from "@/lib/sample";
-import { plural } from "@/lib/text";
+import { plural, preview } from "@/lib/text";
 import { toast } from "@/lib/toast";
 
 // Inputs below this size are redacted synchronously on every keystroke; above it, deferred so typing stays responsive.
@@ -15,8 +16,15 @@ export const LIVE_LIMIT = 400_000;
 
 export interface TermFormDefaults {
   entity: string;
+  /** Token name for "Other" terms; blank keeps [CUSTOM_N]. */
+  customName: string;
   wholeWord: boolean;
   caseSensitive: boolean;
+}
+
+/** The entity a new term gets from the form, with "Other" swapped for its custom name. */
+export function resolveEntity(form: TermFormDefaults): string {
+  return form.entity === "CUSTOM" ? customEntity(form.customName) : form.entity;
 }
 
 const EMPTY_MAP: Map<string, string> = new Map();
@@ -33,7 +41,7 @@ export function useRedactor() {
   );
   const [excluded, setExcluded] = useState<Set<string>>(() => new Set());
   const [remember, setRememberState] = useState(initialPrefs?.remember ?? false);
-  const [termForm, setTermForm] = useState<TermFormDefaults>({ entity: "CUSTOM", wholeWord: true, caseSensitive: false });
+  const [termForm, setTermForm] = useState<TermFormDefaults>({ entity: "CUSTOM", customName: "", wholeWord: true, caseSensitive: false });
 
   // Which text the current result was computed from: live, deferred, or (while paused) the text at "Redact now".
   const deferred = useDeferredValue(source);
@@ -110,11 +118,11 @@ export function useRedactor() {
   );
 
   const addTerm = useCallback(
-    (value: string, entity: string = termForm.entity): boolean => {
+    (value: string, entity: string = resolveEntity(termForm)): boolean => {
       const trimmed = String(value || "").trim();
       if (!trimmed) return false;
       if (terms.some((t) => t.value.toLowerCase() === trimmed.toLowerCase())) {
-        toast(`"${trimmed}" is already in your terms.`);
+        toast(`"${preview(trimmed, 60)}" is already in your terms.`);
         return false;
       }
       setTerms((prev) => [

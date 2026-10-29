@@ -16,7 +16,7 @@ export function Toaster() {
           key={current.id}
           data-tone={current.tone}
           className={cn(
-            "max-w-[min(520px,calc(100vw-2rem))] rounded-lg border border-border-strong bg-popover px-4 py-2.5 text-sm shadow-panel",
+            "max-w-[min(520px,calc(100vw-2rem))] rounded-lg [overflow-wrap:anywhere] border border-border-strong bg-popover px-4 py-2.5 text-sm shadow-panel",
             "animate-in fade-in-0 slide-in-from-bottom-2 duration-(--dur-slow)",
             current.tone === "success" && "border-success/50",
             current.tone === "error" && "border-destructive/60 text-destructive"

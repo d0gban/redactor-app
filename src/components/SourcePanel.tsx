@@ -4,9 +4,9 @@ import { HighlightEditor } from "@/components/HighlightEditor";
 import { Panel, PanelActions, PanelBody, PanelFooter, PanelHeader, PanelTitle } from "@/components/panel";
 import { Button } from "@/components/ui/button";
 import type { Hover } from "@/hooks/useHover";
-import type { Redactor } from "@/hooks/useRedactor";
+import { resolveEntity, type Redactor } from "@/hooks/useRedactor";
 import { entityLabel } from "@/lib/entities";
-import { plural } from "@/lib/text";
+import { plural, preview } from "@/lib/text";
 import { toast } from "@/lib/toast";
 
 interface SourcePanelProps {
@@ -37,7 +37,7 @@ export function SourcePanel({ r, hover, onHoverEditor, className, style }: Sourc
 
   const redactSelection = () => {
     if (!picked || !r.addTerm(picked)) return;
-    toast(`Added "${picked}" as ${entityLabel(r.termForm.entity)}. You can change the type under Always redact.`, { tone: "success" });
+    toast(`Added "${preview(picked, 60)}" as ${entityLabel(resolveEntity(r.termForm))}. You can change the type under Always redact.`, { tone: "success" });
   };
 
   return (
