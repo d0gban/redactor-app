@@ -1,8 +1,8 @@
 // Only preferences are ever persisted, and only when the user opts in. Prompt text never is.
-import { CATEGORIES, defaultEnabledCategories } from "@/engine/detectors.js";
+import { defaultEnabledCategories } from "@/engine/detectors.js";
+import { CONFIG_MAX_TERMS, sanitizeCategories, sanitizeTerms } from "@/lib/config";
 
 const STORAGE_KEY = "redactor:prefs:v1";
-const KNOWN_CATEGORIES = new Set(CATEGORIES.map((c) => c.id));
 
 export interface TermItem {
   id: string;
@@ -36,12 +36,11 @@ export function readPrefs(): Prefs | null {
     if (!raw) return null;
     const data = JSON.parse(raw);
     if (!data || data.remember !== true) return null;
+    // Storage is only as trustworthy as anything else that can write to it, so it gets the same checks as an import.
     return {
       remember: true,
-      terms: Array.isArray(data.terms) ? data.terms.filter((t: { value?: string }) => t && t.value).map(makeTerm) : [],
-      enabledCategories: Array.isArray(data.enabledCategories)
-        ? new Set<string>(data.enabledCategories.filter((id: string) => KNOWN_CATEGORIES.has(id)))
-        : defaultEnabledCategories()
+      terms: Array.isArray(data.terms) ? sanitizeTerms(data.terms.slice(0, CONFIG_MAX_TERMS)).terms.map(makeTerm) : [],
+      enabledCategories: Array.isArray(data.enabledCategories) ? sanitizeCategories(data.enabledCategories) : defaultEnabledCategories()
     };
   } catch {
     return null;

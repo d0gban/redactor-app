@@ -1,5 +1,5 @@
-import { X } from "lucide-react";
-import { useState } from "react";
+import { Download, Upload, X } from "lucide-react";
+import { useRef, useState } from "react";
 
 import { Panel } from "@/components/panel";
 import { Button } from "@/components/ui/button";
@@ -173,7 +173,38 @@ function TermsSection({ r }: { r: Redactor }) {
           </li>
         )}
       </ul>
+
+      <SettingsTransfer r={r} />
     </section>
+  );
+}
+
+function SettingsTransfer({ r }: { r: Redactor }) {
+  const fileRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className="flex flex-wrap items-center gap-1">
+      <Button variant="ghost" size="xs" onClick={() => fileRef.current?.click()} title="Add terms and detector settings from a .json file">
+        <Upload className="size-3.5" aria-hidden="true" />
+        Import settings
+      </Button>
+      <Button variant="ghost" size="xs" onClick={r.exportConfig} title="Save terms and detector settings as .json. Prompt text is not included.">
+        <Download className="size-3.5" aria-hidden="true" />
+        Export settings
+      </Button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept=".json,application/json"
+        aria-label="Settings file to import"
+        className="hidden"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          // Reset so picking the same file again still fires a change.
+          event.target.value = "";
+          if (file) void r.importConfig(file);
+        }}
+      />
+    </div>
   );
 }
 

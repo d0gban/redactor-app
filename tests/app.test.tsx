@@ -236,6 +236,42 @@ describe("chrome", () => {
   });
 });
 
+describe("settings import", () => {
+  const settingsFile = (body: unknown) => new File([JSON.stringify(body)], "settings.json", { type: "application/json" });
+
+  test("adds the file's terms and detector toggles", async () => {
+    const user = setup();
+    await user.upload(
+      screen.getByLabelText("Settings file to import"),
+      settingsFile({ format: "redactor-config", version: 1, terms: [{ value: "Acme Corp", entity: "ORG" }, { value: "bad‮" }], enabledCategories: ["secrets"] })
+    );
+    expect(await screen.findByRole("button", { name: "Remove Acme Corp" })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Imported 1 term and detector settings. 1 entry skipped");
+    expect(screen.getByRole("checkbox", { name: /Contact details/ })).not.toBeChecked();
+
+    await user.click(promptBox());
+    await user.paste("Ask Acme Corp");
+    expect(within(safePrompt()).getByRole("button", { name: "[ORG_1]" })).toBeInTheDocument();
+  });
+
+  test("rejects a file that isn't a settings export without changing anything", async () => {
+    const user = setup();
+    await user.upload(screen.getByLabelText("Settings file to import"), settingsFile({ terms: [{ value: "Acme" }] }));
+    expect(await screen.findByText("That file isn't a Redactor settings export.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove Acme" })).not.toBeInTheDocument();
+  });
+});
+
+test("an Other term can be given its own token name", async () => {
+  const user = setup();
+  await user.type(screen.getByLabelText("Token name (optional)"), "Ticket ID");
+  expect(screen.getByText("9/20")).toBeInTheDocument();
+  await user.type(screen.getByPlaceholderText("Name or company"), "ABC-123{Enter}");
+  await user.click(promptBox());
+  await user.paste("See ABC-123");
+  expect(within(safePrompt()).getByRole("button", { name: "[TICKET_ID_1]" })).toBeInTheDocument();
+});
+
 describe("narrow screens", () => {
   beforeEach(() => {
     // Below the lg breakpoint: one pane at a time.

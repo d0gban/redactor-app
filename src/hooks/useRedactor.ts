@@ -3,6 +3,8 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "rea
 import { defaultEnabledCategories } from "@/engine/detectors.js";
 import { normalizeEntity, redact, restore, type RedactResult, type RestoreResult } from "@/engine/redact.js";
 import { copyText } from "@/lib/clipboard";
+import { CONFIG_MAX_TERMS, readConfigFile, serializeConfig } from "@/lib/config";
+import { downloadText } from "@/lib/download";
 import { customEntity } from "@/lib/entities";
 import { makeTerm, readPrefs, writePrefs, type TermItem } from "@/lib/prefs";
 import { SAMPLE_PROMPT, SAMPLE_TERMS } from "@/lib/sample";
@@ -164,6 +166,34 @@ export function useRedactor() {
     setSourceText(SAMPLE_PROMPT);
   }, [terms]);
 
+  const exportConfig = useCallback(() => {
+    const date = new Date().toISOString().slice(0, 10);
+    downloadText(serializeConfig(terms, enabledCategories), `redactor-settings-${date}.json`);
+    toast(`Exported ${plural(terms.length, "term")} and detector settings. Prompt text is not included.`, { tone: "success" });
+  }, [terms, enabledCategories]);
+
+  // Imported terms are added to the current ones; detector toggles are replaced when the file sets them.
+  const importConfig = useCallback(
+    async (file: File) => {
+      const parsed = await readConfigFile(file);
+      if (!parsed.ok) {
+        toast(parsed.error, { tone: "error" });
+        return;
+      }
+      const { config } = parsed;
+      const known = new Set(terms.map((t) => t.value.toLowerCase()));
+      const fresh = config.terms.filter((t) => !known.has(t.value.toLowerCase()));
+      const added = fresh.slice(0, Math.max(0, CONFIG_MAX_TERMS - terms.length)).map((t) => makeTerm(t));
+      const skipped = parsed.skipped + (config.terms.length - added.length);
+      if (added.length) setTerms((prev) => [...prev, ...added]);
+      if (config.enabledCategories) setEnabledCategories(config.enabledCategories);
+      const parts = [`Imported ${plural(added.length, "term")}${config.enabledCategories ? " and detector settings" : ""}.`];
+      if (skipped) parts.push(`${plural(skipped, "entry", "entries")} skipped (duplicate or invalid).`);
+      toast(parts.join(" "), { tone: "success" });
+    },
+    [terms]
+  );
+
   const copySafePrompt = useCallback(async () => {
     // A stale or paused result must not be copied: recompute from the text as it is now.
     const fresh = result && resultIsCurrent ? result : source ? redact(source, { terms, enabledCategories, excluded }) : null;
@@ -242,6 +272,8 @@ export function useRedactor() {
     remember,
     setRemember,
     loadSample,
+    exportConfig,
+    importConfig,
     copySafePrompt,
     // restore
     reply,

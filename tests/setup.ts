@@ -35,4 +35,16 @@ if (typeof window !== "undefined") {
   Element.prototype.hasPointerCapture = () => false;
   Element.prototype.setPointerCapture = () => {};
   Element.prototype.releasePointerCapture = () => {};
+
+  // jsdom's Blob predates Blob.text(), which every supported browser has.
+  if (!Blob.prototype.text) {
+    Blob.prototype.text = function (this: Blob) {
+      return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsText(this);
+      });
+    };
+  }
 }
