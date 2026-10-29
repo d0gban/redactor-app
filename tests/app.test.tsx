@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -260,6 +260,17 @@ describe("settings import", () => {
     expect(await screen.findByText("That file isn't a Redactor settings export.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Remove Acme" })).not.toBeInTheDocument();
   });
+});
+
+test("removing a term hands focus to the next row's remove button", async () => {
+  const user = setup();
+  const input = screen.getByPlaceholderText("Name or company");
+  await user.type(input, "Acme{Enter}");
+  await user.type(input, "Globex{Enter}");
+  await user.click(screen.getByRole("button", { name: "Remove Acme" }));
+  await waitFor(() => expect(screen.getByRole("button", { name: "Remove Globex" })).toHaveFocus());
+  await user.click(screen.getByRole("button", { name: "Remove Globex" }));
+  await waitFor(() => expect(input).toHaveFocus());
 });
 
 test("an Other term can be given its own token name", async () => {

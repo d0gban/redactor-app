@@ -32,19 +32,25 @@ function Swatch({ off = false }: { off?: boolean }) {
   return <span aria-hidden="true" className={cn("size-2 shrink-0 rounded-[2px] bg-(--cat)", off && "opacity-30")} />;
 }
 
-function TermChip({ term, r }: { term: TermItem; r: Redactor }) {
+function TermRow({ term, r, onRemove }: { term: TermItem; r: Redactor; onRemove: () => void }) {
   const options = ENTITY_OPTIONS.some(([value]) => value === term.entity)
     ? ENTITY_OPTIONS
     : [...ENTITY_OPTIONS, [term.entity, entityLabel(term.entity)] as const];
   const flags = [term.caseSensitive ? "Aa" : "", term.wholeWord ? "" : "partial"].filter(Boolean).join(" · ");
   const name = preview(term.value, 60);
   return (
-    <li className="cat--custom inline-flex max-w-full min-w-0 items-center gap-1.5 rounded-md border border-(--cat)/40 bg-(--cat)/10 py-0.5 pr-0.5 pl-1 text-sm">
+    <li className="cat--custom col-span-3 grid grid-cols-subgrid items-center rounded-md py-0.5 pr-0.5 pl-2 text-sm hover:bg-accent">
+      <span className="flex min-w-0 items-baseline gap-1.5">
+        <span className="truncate" title={term.value}>
+          {preview(term.value, 60)}
+        </span>
+        {flags ? <span className="shrink-0 text-2xs text-subtle">{flags}</span> : null}
+      </span>
       <select
         value={term.entity}
         onChange={(event) => r.changeTermEntity(term.id, event.target.value)}
         aria-label={`Type for ${name}`}
-        className="max-w-[45%] shrink-0 truncate rounded-[4px] bg-transparent px-0.5 text-2xs font-semibold tracking-wide text-(--cat) uppercase pointer-coarse:min-h-11"
+        className="max-w-[17ch] truncate rounded-[4px] bg-transparent px-1 py-0.5 text-2xs font-semibold tracking-wide text-(--cat) uppercase hover:bg-(--cat)/10 pointer-coarse:min-h-11"
       >
         {options.map(([value, label]) => (
           <option key={value} value={value} className="bg-popover text-foreground normal-case">
@@ -52,15 +58,12 @@ function TermChip({ term, r }: { term: TermItem; r: Redactor }) {
           </option>
         ))}
       </select>
-      <span className="min-w-0 flex-1 truncate" title={term.value}>
-        {preview(term.value, 40)}
-      </span>
-      {flags ? <span className="shrink-0 text-2xs text-subtle">{flags}</span> : null}
       <button
         type="button"
-        onClick={() => r.removeTerm(term.id)}
+        id={`remove-${term.id}`}
+        onClick={onRemove}
         aria-label={`Remove ${name}`}
-        className="grid size-[22px] shrink-0 place-items-center rounded-[4px] text-muted-foreground hover:bg-destructive/20 hover:text-destructive pointer-coarse:size-11"
+        className="grid size-7 place-items-center rounded-[4px] text-muted-foreground hover:bg-destructive/20 hover:text-destructive pointer-coarse:size-11"
       >
         <X className="size-3.5" aria-hidden="true" />
       </button>
@@ -71,6 +74,13 @@ function TermChip({ term, r }: { term: TermItem; r: Redactor }) {
 function TermsSection({ r }: { r: Redactor }) {
   const [value, setValue] = useState("");
   const { termForm, setTermForm } = r;
+
+  // Keep keyboard focus in the list: the next row slides into place, so its remove button takes over.
+  const removeTerm = (index: number) => {
+    const next = r.terms[index + 1] ?? r.terms[index - 1];
+    r.removeTerm(r.terms[index].id);
+    requestAnimationFrame(() => document.getElementById(next ? `remove-${next.id}` : "term-value")?.focus());
+  };
 
   return (
     <section aria-labelledby="terms-title" className={sectionClasses}>
@@ -155,15 +165,18 @@ function TermsSection({ r }: { r: Redactor }) {
         </div>
       </form>
 
-      <ul aria-label="Terms" className="flex min-w-0 flex-wrap gap-1.5">
-        {r.terms.length ? (
-          r.terms.map((term) => <TermChip key={term.id} term={term} r={r} />)
-        ) : (
-          <li className="w-full p-3 text-center text-sm text-subtle">
-            No terms yet. Add names, companies or projects that pattern detection can&apos;t know about.
-          </li>
-        )}
-      </ul>
+      {r.terms.length ? (
+        // One shared grid so every remove button lines up in the same column, row after row.
+        <ul aria-label="Terms" className="-mx-2 grid min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] gap-x-1 gap-y-px">
+          {r.terms.map((term, index) => (
+            <TermRow key={term.id} term={term} r={r} onRemove={() => removeTerm(index)} />
+          ))}
+        </ul>
+      ) : (
+        <p className="p-3 text-center text-sm text-subtle">
+          No terms yet. Add names, companies or projects that pattern detection can&apos;t know about.
+        </p>
+      )}
 
       <SavedSettings r={r} />
     </section>
